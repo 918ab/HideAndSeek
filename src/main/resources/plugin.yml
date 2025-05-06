@@ -2,9 +2,12 @@ name: HideAndSeek
 version: '${project.version}'
 main: main.hideandseek.HideAndSeek
 api-version: '1.21'
-depend: [ModelEngine]
+depend:
+  - ModelEngine
 commands:
   숨바꼭질:
     aliases:
       - 숨꼭
+      - hideandseek
+      - has
     permission: op

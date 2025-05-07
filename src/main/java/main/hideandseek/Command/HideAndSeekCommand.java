@@ -1,39 +1,40 @@
 package main.hideandseek.Command;
 
-import main.hideandseek.Static.ModelEnginePlay;
+import main.hideandseek.Static.ModelAnimationLoop;
+import main.hideandseek.Static.ModelEngineAnimation;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class HideAndSeekCommand implements CommandExecutor {
+    private final Map<Player, ModelAnimationLoop> playerTasks = new HashMap<>();
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage("플레이어만 이 명령어를 실행할 수 있습니다.");
-            return false;
-        }
-
-        Player player = (Player) sender;
-
-        // 애니메이션 실행
-        ModelEnginePlay.ModelPlay(player, "shift");
-
-        // 인자가 존재하는지 확인
-        if (args.length > 0) {
-            if (args[0].equalsIgnoreCase("true")) {
-                // idle 애니메이션을 멈추고 새로운 애니메이션 실행
-                ModelEnginePlay.ModelStop(player, "idle");
-            } else if (args[0].equalsIgnoreCase("false")) {
-                // 기본 idle 애니메이션 실행
-                ModelEnginePlay.ModelStop(player, "shift");
-            } else {
-                player.sendMessage("유효한 인자를 입력해주세요. 'true' 또는 'false'만 가능합니다.");
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length == 1) {
+            if (args[0].equalsIgnoreCase("시작")) {
+                Player player = (Player) sender;
+                if (playerTasks.containsKey(player) && playerTasks.get(player).isRunning()) {
+                    return true;//이미 시작됨
+                }
+                ModelAnimationLoop modelEnginePlay = new ModelAnimationLoop(player);
+                modelEnginePlay.startRepeating(new String[]{"walk", "idle","jump"});
+                playerTasks.put(player, modelEnginePlay);
+                ModelEngineAnimation.ModelPlay(player,"slash",modelEnginePlay);
+                //반복 시작
+            } else if (args[0].equalsIgnoreCase("중지")) {
+                Player player = (Player) sender;
+                if (playerTasks.containsKey(player)) {
+                    ModelAnimationLoop modelEnginePlay = playerTasks.get(player);
+                    modelEnginePlay.stopRepeating();
+                    playerTasks.remove(player);
+                    //반복 중단
+                }//반복시작안함
             }
-        } else {
-            player.sendMessage("인자를 입력하세요. 예: /명령어 true 또는 /명령어 false");
         }
-        return true;
+        return false;
     }
 }

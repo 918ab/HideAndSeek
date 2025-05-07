@@ -2,18 +2,20 @@ package main.hideandseek;
 
 
 
+import com.ticxo.modelengine.api.ModelEngineAPI;
 import main.hideandseek.Command.HideAndSeekCommand;
-import main.hideandseek.Static.ModelEnginePlay;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class HideAndSeek extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        Bukkit.getLogger().info("[HideAndSeek] Plugin Enable");
+        getLogger().info("[HideAndSeek] Plugin Enable");
         getCommand("숨바꼭질").setExecutor(new HideAndSeekCommand());
-        ModelEnginePlay.startCustomModeMonitor();
+        if (ModelEngineAPI.getAPI() == null) {
+            getLogger().warning("모델엔진 플러그인 찾을 수 없음");
+            getServer().getPluginManager().disablePlugin(this);
+        }
     }
 
     @Override

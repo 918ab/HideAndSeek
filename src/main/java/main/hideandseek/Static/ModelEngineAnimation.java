@@ -12,6 +12,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.io.File;
 import java.io.FileReader;
 import java.util.Map;
 public class ModelEngineAnimation {
@@ -73,50 +74,44 @@ public class ModelEngineAnimation {
         handler.stopAnimation(animation);
         player.sendMessage("stop / " + animation);
     }
-    //gitignore
 
-    public static void printAnimationNames(Player player, String modelId) {
-        try (FileReader reader = new FileReader("plugins/ModelEngine/blueprints/" + modelId + ".bbmodel")) {
+    public static void ModelReload(){
+        File dic = new File("plugins/ModelEngine/blueprints/");
+        if(dic.exists() && dic.isDirectory()) {
+            File[] files = dic.listFiles();
+            if (files != null) {
+                for (File file : dic.listFiles()) {
+                    String modelId = file.getName().substring(0, file.getName().length() - ".bbmodel".length());
+                    printAnimationNames(modelId);
+                }
+            } else {
+                Bukkit.broadcastMessage("§c디렉토리에 파일이 없습니다");
+            }
+        }
+    }
+    public static void printAnimationNames(String modelId) {
+        try (FileReader reader = new FileReader("plugins/ModelEngine/blueprints/" + modelId+".bbmodel")) {
             JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
             JsonElement animationsElement = json.get("animations");
-
             if (animationsElement == null) {
-                player.sendMessage("§c[" + modelId + "] 모델에 animations 필드가 없습니다.");
+                Bukkit.broadcastMessage("§canimations 존재하지 않음("+modelId+")");
                 return;
             }
-
-            if (animationsElement.isJsonObject()) {
-                JsonObject animations = animationsElement.getAsJsonObject();
-                if (animations.size() == 0) {
-                    player.sendMessage("§e[" + modelId + "] 모델에 애니메이션이 없습니다.");
-                    return;
-                }
-                player.sendMessage("§a[" + modelId + "] 모델 애니메이션 목록:");
-                for (Map.Entry<String, JsonElement> entry : animations.entrySet()) {
-                    player.sendMessage(" §f- " + entry.getKey());
-                }
-
-            } else if (animationsElement.isJsonArray()) {
+            if (animationsElement.isJsonArray()) {
                 JsonArray animations = animationsElement.getAsJsonArray();
                 if (animations.size() == 0) {
-                    player.sendMessage("§e[" + modelId + "] 모델에 애니메이션이 없습니다.");
+                    Bukkit.broadcastMessage("§c애니메이션 존재하지 않음("+modelId+")");
                     return;
                 }
-                player.sendMessage("§a[" + modelId + "] 모델 애니메이션 목록:");
                 for (JsonElement animationElement : animations) {
-
                     JsonObject animationObj = animationElement.getAsJsonObject();
-                    if (animationObj.has("name")) {
-                        player.sendMessage(" §f- " + animationObj.get("name").getAsString());
-                    }
-                    if(animationObj.has("length")){
-                        player.sendMessage(" §f- " + animationObj.get("length").getAsString());
+                    if (animationObj.has("name") && animationObj.has("length")) {
+                        HideAndSeekStorage.put("[ModelEngine]"+modelId+","+animationObj.get("name").getAsString(),animationObj.get("length").getAsDouble());
                     }
                 }
             }
-
         } catch (Exception e) {
-            Bukkit.broadcastMessage(pr+"애니메이션 불러오는 중 오류("+modelId+" : " + e.getMessage());
+            Bukkit.broadcastMessage("§c모델 불러오는 중 오류("+modelId+") : " + e.getMessage());
         }
     }
 

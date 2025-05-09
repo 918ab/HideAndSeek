@@ -14,6 +14,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.List;
 import java.util.Map;
 public class ModelEngineAnimation {
 
@@ -74,21 +75,37 @@ public class ModelEngineAnimation {
         handler.stopAnimation(animation);
         player.sendMessage("stop / " + animation);
     }
-
+    public static DataManager f = new DataManager(Bukkit.getPluginManager().getPlugin("HideAndseek"), "Data.yml");
     public static void ModelReload(){
         File dic = new File("plugins/ModelEngine/blueprints/");
+
         if(dic.exists() && dic.isDirectory()) {
             File[] files = dic.listFiles();
             if (files != null) {
                 for (File file : dic.listFiles()) {
                     String modelId = file.getName().substring(0, file.getName().length() - ".bbmodel".length());
+                    if(f.get("HideAndSeek."+modelId) == null){
+                        Bukkit.getLogger().info("[HideAndSeek] "+modelId+" 자동생성");
+                        f.set("HideAndSeek."+modelId+".Name","설정되지않음");
+                        f.set("HideAndSeek."+modelId+".PlayerScale",1);
+                        f.set("HideAndSeek."+modelId+".ModelScale",1);
+                    }else{
+                        HideAndSeekStorage.put(modelId+",PlayerScale",f.get("HideAndSeek."+modelId+".PlayerScale"));
+                        HideAndSeekStorage.put(modelId+",ModelScale",f.get("HideAndSeek."+modelId+".ModelScale"));
+                        if(!f.get("HideAndSeek."+modelId+".Name").equals("설정되지않음")) {
+                            HideAndSeekStorage.put(modelId + ",Name", f.get("HideAndSeek." + modelId + ".Name"));
+                        }
+                    }
                     printAnimationNames(modelId);
                 }
             } else {
                 Bukkit.broadcastMessage("§c디렉토리에 파일이 없습니다");
             }
         }
+
+
     }
+
     public static void printAnimationNames(String modelId) {
         try (FileReader reader = new FileReader("plugins/ModelEngine/blueprints/" + modelId+".bbmodel")) {
             JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
@@ -107,6 +124,10 @@ public class ModelEngineAnimation {
                     JsonObject animationObj = animationElement.getAsJsonObject();
                     if (animationObj.has("name") && animationObj.has("length")) {
                         HideAndSeekStorage.put("[ModelEngine]"+modelId+","+animationObj.get("name").getAsString(),animationObj.get("length").getAsDouble());
+                        String animation = animationObj.get("name").getAsString();
+                        if(f.get("HideAndSeek."+modelId+".Animation."+animation) == null){
+                            f.set("HideAndSeek."+modelId+".Animation."+animation,"auto");
+                        }
                     }
                 }
             }

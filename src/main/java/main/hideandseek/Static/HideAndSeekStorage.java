@@ -18,7 +18,7 @@ public class HideAndSeekStorage {
         Storage.remove(key);
     }
 
-    public static void printAll(Player player,Boolean tf) {
+    public static void printAll(Player player) {
         if (Storage.isEmpty()){
             player.sendMessage(pr+"아직 초기화되지 않음");
             return;
@@ -33,16 +33,12 @@ public class HideAndSeekStorage {
             String animation = split[1];
             grouped.computeIfAbsent(modelId, k -> new ArrayList<>()).add(animation);
         }
-
+        DataManager f = new DataManager(Bukkit.getPluginManager().getPlugin("HideAndseek"), "Data.yml");
         for (String modelId : grouped.keySet()) {
             List<String> animations = grouped.get(modelId);
-            if(tf == true) {
-                player.sendMessage(pr + "[§a" + modelId + "§f] 애니메이션 목록 (§a" + animations.size() + "개§f):");
-                String allAnimations = String.join(", ", animations);
-                player.sendMessage(" §f- " + allAnimations);
-            }else{
-                player.sendMessage(pr + "[§a" + modelId + "§f] 애니메이션 목록 (§a" + animations.size() + "개§f)");
-            }
+
+            player.sendMessage(pr+"[§e" + modelId + "§f] 애니메이션 목록 (§e" + animations.size() + "개§f)");
+            player.sendMessage(pr+"플레이어크기 : §e"+f.get("HideAndSeek."+modelId+".PlayerScale") + "§f / 모델크기 : §e"+f.get("HideAndSeek."+modelId+".ModelScale"));
         }
     }
 }

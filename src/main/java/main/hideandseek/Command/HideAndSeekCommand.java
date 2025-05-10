@@ -1,5 +1,6 @@
 package main.hideandseek.Command;
 
+import com.ticxo.modelengine.api.ModelEngineAPI;
 import main.hideandseek.Static.DataManager;
 import main.hideandseek.Static.HideAndSeekStorage;
 import main.hideandseek.Static.ModelAnimationLoop;
@@ -21,6 +22,7 @@ public class HideAndSeekCommand implements CommandExecutor {
             return true;
         }
         Player player = (Player) sender;
+        ModelEngineAnimation.ModelDisguise(player,"bakezori");
         String arg = null;
         if (args.length == 0) {
             arg = "default";
@@ -30,6 +32,10 @@ public class HideAndSeekCommand implements CommandExecutor {
         switch (arg) {
             case "정보":
             case "info":
+                if(args.length >= 2){
+                    HideAndSeekStorage.print(player,args[1]);
+                    return true;
+                }
                 HideAndSeekStorage.printAll(player);
                 break;
             case "리로드":
@@ -43,7 +49,7 @@ public class HideAndSeekCommand implements CommandExecutor {
                 List<String> list = f.getNames("HideAndSeek");
                 if(args.length >= 2){
                     if(list.contains(args[1])){
-                        List<String> keyList = new ArrayList<>(Arrays.asList("PlayerScale", "ModelScale"));
+                        List<String> keyList = new ArrayList<>(Arrays.asList("PlayerScale", "PlayerHealth","ModelScale", "Name"));
                         List<String> Animations = f.getNames("HideAndSeek."+args[1]+".Animation");
                         for(String Animation : Animations){
                             keyList.add("Animation."+Animation);
@@ -52,16 +58,25 @@ public class HideAndSeekCommand implements CommandExecutor {
                             String modelId = args[1];
                             String key = args[2];
                             if(args[2].contains("Animation.")){
-                                if(args[3].equals("auto") || args[3].equals("switch")){
+                                if(args[3].equals("auto") || args[3].equals("switch") ){
                                     String value = args[3];
                                     player.sendMessage(pr+modelId+" / "+key+" / "+value +" §a설정완료");
                                     f.set("HideAndSeek."+modelId+"."+key,value);
+                                    HideAndSeekStorage.put("",value);
                                 }else{
                                     player.sendMessage(pr+"auto, switch 중에 입력해주세요");
                                 }
+                            }else if(args[2].equals("Name")) {
+                                if(args.length >= 4){
+                                    String value = args[3];
+                                    player.sendMessage(pr+modelId+" / "+key+" / "+value +" §a설정완료");
+                                    f.set("HideAndSeek."+modelId+"."+key,value);
+                                }else {
+                                    player.sendMessage(pr + "이름을 입력해주세요");
+                                }
                             }else{
                                 try {
-                                    int value = Integer.parseInt(args[3]);
+                                    double value = Double.parseDouble(args[3]);
                                     player.sendMessage(pr+modelId+" / "+key+" / "+value +" §a설정완료");
                                     f.set("HideAndSeek."+modelId+"."+key,value);
                                 } catch (NumberFormatException e) {

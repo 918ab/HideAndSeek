@@ -25,8 +25,8 @@ public class HideAndSeekStorage {
         };
         Map<String, List<String>> grouped = new HashMap<>();
         for (String key : Storage.keySet()) {
-            if (!key.startsWith("[ModelEngine]")) continue;
-            String pureKey = key.substring("[ModelEngine]".length());
+            if (!key.startsWith("[Animation]")) continue;
+            String pureKey = key.substring("[Animation]".length());
             String[] split = pureKey.split(",", 2);
             if (split.length < 2) continue;
             String modelId = split[0];
@@ -36,9 +36,18 @@ public class HideAndSeekStorage {
         DataManager f = new DataManager(Bukkit.getPluginManager().getPlugin("HideAndseek"), "Data.yml");
         for (String modelId : grouped.keySet()) {
             List<String> animations = grouped.get(modelId);
-
-            player.sendMessage(pr+"[§e" + modelId + "§f] 애니메이션 목록 (§e" + animations.size() + "개§f)");
-            player.sendMessage(pr+"플레이어크기 : §e"+f.get("HideAndSeek."+modelId+".PlayerScale") + "§f / 모델크기 : §e"+f.get("HideAndSeek."+modelId+".ModelScale"));
+            player.sendMessage(pr+ "[§a"+modelId+"§f] 애니메이션 "+animations.size()+"개");
+            player.sendMessage(pr+
+                    "Name: §e"+f.get("HideAndSeek."+modelId+".Name")
+                    +"§f, PHealth: §e"+f.get("HideAndSeek."+modelId+".PlayerHealth")
+                    +"§f, PScale: §e"+f.get("HideAndSeek."+modelId+".PlayerScale")
+                    +"§f, MScale: §e"+f.get("HideAndSeek."+modelId+".ModelScale"));
+        }
+    }
+    public static void print(Player player,String name) {
+        for (String key : Storage.keySet()) {
+            if (!key.contains(name)) continue;
+            player.sendMessage(pr+"Key : "+key +", Value : "+ Storage.get(key));
         }
     }
 }

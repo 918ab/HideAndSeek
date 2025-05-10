@@ -48,7 +48,9 @@ public class HideAndSeekCommandTab implements TabCompleter {
                         candidates.add("Animation."+Animation);
                     }
                     candidates.add("PlayerScale");
+                    candidates.add("PlayerHealth");
                     candidates.add("ModelScale");
+                    candidates.add("Name");
                 }
             }
             if (args.length == 4) {
@@ -56,8 +58,12 @@ public class HideAndSeekCommandTab implements TabCompleter {
                     if(args[2].contains("Animation.")){
                         candidates.add("auto");
                         candidates.add("switch");
-                    }else{
+                    }else if(args[2].equals("Name")){
+                        candidates.add("(Name)");
+                    }else if(args[2].equals("PlayerHealth")) {
                         candidates.add("(int)");
+                    }else{
+                        candidates.add("(double)");
                     }
                 }
             }

@@ -5,7 +5,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.ticxo.modelengine.api.ModelEngineAPI;
+import com.ticxo.modelengine.api.animation.AnimationPropertyRegistry;
+import com.ticxo.modelengine.api.animation.ModelState;
 import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
+import com.ticxo.modelengine.api.animation.property.IAnimationProperty;
+import com.ticxo.modelengine.api.animation.property.SimpleProperty;
 import com.ticxo.modelengine.api.entity.Dummy;
 import com.ticxo.modelengine.api.generator.blueprint.ModelBlueprint;
 import com.ticxo.modelengine.api.model.ActiveModel;
@@ -80,11 +84,17 @@ public class ModelEngineAnimation {
     public static void ModelStop(Player player, String animation) {
         AnimationHandler handler = getHandler(player);
         if (handler == null) return;
+        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.IDLE, "noop", 0.2, 0.2, 1.0));
+        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.WALK, "noop", 0.2, 0.2, 1.0));
+        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.JUMP, "noop", 0.2, 0.2, 1.0));
+        //handler.setDefaultProperty();
+        //handler.stopAnimation(animation);
 
-        handler.stopAnimation(animation);
+        handler.playAnimation(animation, 0.3, 0.3, 1, false);
         player.sendMessage("stop / " + animation);
     }
     public static void ModelReload(){
+
         DataManager f = new DataManager(Bukkit.getPluginManager().getPlugin("HideAndseek"), "Data.yml");
         File dic = new File("plugins/ModelEngine/blueprints/");
         if(dic.exists() && dic.isDirectory()) {
@@ -126,34 +136,39 @@ public class ModelEngineAnimation {
     }
 
     public static void printAnimationNames(String modelId) {
-        DataManager f = new DataManager(Bukkit.getPluginManager().getPlugin("HideAndseek"), "Data.yml");
-        try (FileReader reader = new FileReader("plugins/ModelEngine/blueprints/" + modelId+".bbmodel")) {
-            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
-            JsonElement animationsElement = json.get("animations");
-            if (animationsElement == null) {
-                Bukkit.broadcastMessage("§canimations 존재하지 않음("+modelId+")");
-                return;
-            }
-            if (animationsElement.isJsonArray()) {
-                JsonArray animations = animationsElement.getAsJsonArray();
-                if (animations.size() == 0) {
-                    Bukkit.broadcastMessage("§c애니메이션 존재하지 않음("+modelId+")");
-                    return;
-                }
-                for (JsonElement animationElement : animations) {
-                    JsonObject animationObj = animationElement.getAsJsonObject();
-                    if (animationObj.has("name") && animationObj.has("length")) {
-                        HideAndSeekStorage.put("[Animation]"+modelId+","+animationObj.get("name").getAsString(),animationObj.get("length").getAsDouble());
-                        String animation = animationObj.get("name").getAsString();
-                        if(f.get("HideAndSeek."+modelId+".Animation."+animation) == null){
-                            f.set("HideAndSeek."+modelId+".Animation."+animation,"auto");
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                DataManager f = new DataManager(Bukkit.getPluginManager().getPlugin("HideAndseek"), "Data.yml");
+                try (FileReader reader = new FileReader("plugins/ModelEngine/blueprints/" + modelId+".bbmodel")) {
+                    JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+                    JsonElement animationsElement = json.get("animations");
+                    if (animationsElement == null) {
+                        Bukkit.broadcastMessage("§canimations 존재하지 않음("+modelId+")");
+                        return;
+                    }
+                    if (animationsElement.isJsonArray()) {
+                        JsonArray animations = animationsElement.getAsJsonArray();
+                        if (animations.size() == 0) {
+                            Bukkit.broadcastMessage("§c애니메이션 존재하지 않음("+modelId+")");
+                            return;
+                        }
+                        for (JsonElement animationElement : animations) {
+                            JsonObject animationObj = animationElement.getAsJsonObject();
+                            if (animationObj.has("name") && animationObj.has("length")) {
+                                HideAndSeekStorage.put("[Animation]"+modelId+","+animationObj.get("name").getAsString(),animationObj.get("length").getAsDouble());
+                                String animation = animationObj.get("name").getAsString();
+                                if(f.get("HideAndSeek."+modelId+".Animation."+animation) == null){
+                                    f.set("HideAndSeek."+modelId+".Animation."+animation,"auto");
+                                }
+                            }
                         }
                     }
+                } catch (Exception e) {
+                    Bukkit.broadcastMessage("§c모델 불러오는 중 오류("+modelId+") : " + e.getMessage());
                 }
             }
-        } catch (Exception e) {
-            Bukkit.broadcastMessage("§c모델 불러오는 중 오류("+modelId+") : " + e.getMessage());
-        }
+        }.runTaskLater(Bukkit.getPluginManager().getPlugin("HideAndseek"), 40);
     }
 
 }

@@ -10,6 +10,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 
@@ -22,6 +23,7 @@ public class HideAndSeekCommand implements CommandExecutor {
             return true;
         }
         Player player = (Player) sender;
+        //ModelEngineAnimation.ModelStop(player,"death");
         ModelEngineAnimation.ModelDisguise(player,"bakezori");
         String arg = null;
         if (args.length == 0) {
@@ -40,8 +42,14 @@ public class HideAndSeekCommand implements CommandExecutor {
                 break;
             case "리로드":
             case "reload":
+                player.sendMessage(pr+"리로드 중...");
                 ModelEngineAnimation.ModelReload();
-                player.sendMessage(pr+"리로드 완료");
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        player.sendMessage(pr+"리로드 완료");
+                    }
+                }.runTaskLater(Bukkit.getPluginManager().getPlugin("HideAndseek"), 50);
                 break;
             case "설정":
             case "setting":

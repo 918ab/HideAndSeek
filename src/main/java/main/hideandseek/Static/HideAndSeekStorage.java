@@ -50,4 +50,13 @@ public class HideAndSeekStorage {
             player.sendMessage(pr+"Key : "+key +", Value : "+ Storage.get(key));
         }
     }
+    public static List<String> getList(String name) {
+        List<String> list = new ArrayList<>();
+        for (String key : Storage.keySet()) {
+            if (key.contains(name)) {
+                list.add(key);
+            }
+        }
+        return list;
+    }
 }

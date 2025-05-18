@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,27 +27,35 @@ public class HideAndSeekCommandTab implements TabCompleter {
                     candidates.add("reload");
                     candidates.add("info");
                     candidates.add("disguise");
+                    candidates.add("undisguise");
                     candidates.add("setting");
                 } else {
                     candidates.add("리로드");
                     candidates.add("정보");
                     candidates.add("변신");
+                    candidates.add("변신풀기");
                     candidates.add("설정");
                 }
 
             }
             if (args.length == 2) {
-                if(args[0].equals("설정") || args[0].equals("setting")) {
+                if(args[0].equals("설정") || args[0].equals("setting") || args[0].equals("변신") || args[0].equals("disguise")) {
                     List<String> list = f.getNames("HideAndSeek");
                     candidates.addAll(list);
                 }
+                if(args[0].equals("변신풀기") || args[0].equals("undisguise")) {
+                    for(Player player : Bukkit.getOnlinePlayers()){
+                        candidates.add(player.getName());
+                    }
+                }
             }
             if (args.length == 3) {
-                if(args[0].equals("설정") || args[0].equals("setting")) {
-                    List<String> Animations = f.getNames("HideAndSeek."+args[1]+".Animation");
-                    for(String Animation : Animations){
-                        candidates.add("Animation."+Animation);
+                if(args[0].equals("변신") || args[0].equals("disguise")) {
+                    for(Player player : Bukkit.getOnlinePlayers()){
+                        candidates.add(player.getName());
                     }
+                }
+                if(args[0].equals("설정") || args[0].equals("setting")) {
                     candidates.add("PlayerScale");
                     candidates.add("PlayerHealth");
                     candidates.add("ModelScale");
@@ -55,10 +64,7 @@ public class HideAndSeekCommandTab implements TabCompleter {
             }
             if (args.length == 4) {
                 if (args[0].equals("설정") || args[0].equals("setting")) {
-                    if(args[2].contains("Animation.")){
-                        candidates.add("auto");
-                        candidates.add("switch");
-                    }else if(args[2].equals("Name")){
+                    if(args[2].equals("Name")){
                         candidates.add("(Name)");
                     }else if(args[2].equals("PlayerHealth")) {
                         candidates.add("(int)");
@@ -68,7 +74,7 @@ public class HideAndSeekCommandTab implements TabCompleter {
                 }
             }
             for (String candidate : candidates) {
-                if (candidate.toLowerCase().startsWith(input)) {
+                if (candidate.toLowerCase().contains(input)) {
                     completions.add(candidate);
                 }
             }

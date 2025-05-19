@@ -18,8 +18,10 @@ import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
 import com.ticxo.modelengine.api.model.bone.BoneBehaviorTypes;
 import com.ticxo.modelengine.api.model.bone.type.PlayerLimb;
+import com.ticxo.modelengine.core.command.ModelOptionParser;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -58,10 +60,10 @@ public class ModelEngineAnimation {
         handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.IDLE, "noop", 0.2, 0.2, 1.0));
         handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.WALK, "noop", 0.2, 0.2, 1.0));
         handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.JUMP, "noop", 0.2, 0.2, 1.0));
-        //handler.setDefaultProperty();
         //handler.stopAnimation(animation);
 
         handler.playAnimation(animation, 0.3, 0.3, 1, false);
+        Bukkit.broadcastMessage(player+"/"+animation);
         player.sendMessage("stop / " + animation);
     }
     public static void ModelPlayAuto(Player player, String animation, ModelAnimationLoop loop) {
@@ -86,6 +88,11 @@ public class ModelEngineAnimation {
         ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(player.getUniqueId());
         if(modeledEntity != null) {
             player.getInventory().clear();
+            player.setMaxHealth(20);
+            player.setHealth(player.getMaxHealth());
+            player.setFoodLevel(20);
+            player.setSaturation(20.0f);
+            player.getAttribute(Attribute.GENERIC_SCALE).setBaseValue(1);
             modeledEntity.markRemoved();
             ModelEngineAPI.getEntityHandler().setForcedInvisible(player, false);
             ModelEngineAPI.getEntityHandler().forceSpawn(player);
@@ -107,12 +114,19 @@ public class ModelEngineAnimation {
         }
         ModelEngineAPI.getEntityHandler().setForcedInvisible(player, true);
         ActiveModel activeModel = ModelEngineAPI.createActiveModel(blueprint);
+        String input = "scale "+HideAndSeekStorage.get(modelId+",ModelScale")+" hitboxScale "+HideAndSeekStorage.get(modelId+",HitboxScale");
+        String[] args = input.split(" ");
+        ModelOptionParser options = ModelOptionParser.parse(0, args);
+        options.applyDisguiseOptions(activeModel);
         modeledEntity.addModel(activeModel, false);
         activeModel.getBones().values().forEach(modelBone -> {
             modelBone.getBoneBehavior(BoneBehaviorTypes.PLAYER_LIMB).ifPresent(behavior -> {
                 ((PlayerLimb) behavior).setTexture(player);
             });
         });
+        player.setMaxHealth(Double.parseDouble(HideAndSeekStorage.get(modelId+",PlayerHealth").toString()));
+        player.getAttribute(Attribute.GENERIC_SCALE).setBaseValue(Double.parseDouble(HideAndSeekStorage.get(modelId+",PlayerScale").toString()));
+
         List<String> list = HideAndSeekStorage.getList("[ModelEngine]"+modelId);
         if(list.size() > 32){
             Bukkit.getLogger().info("§c 애니메이션이 너무 많습니다 ("+modelId+")");
@@ -174,13 +188,16 @@ public class ModelEngineAnimation {
                 dataManager.set(modelPath + ".Name", "설정되지않음");
                 dataManager.set(modelPath + ".PlayerScale", 1);
                 dataManager.set(modelPath + ".ModelScale", 1);
+                dataManager.set(modelPath + ".HitboxScale", 1);
                 dataManager.set(modelPath + ".PlayerHealth", 20);
             }
 
             HideAndSeekStorage.put(modelId + ",Name", dataManager.get(modelPath + ".Name"));
             HideAndSeekStorage.put(modelId + ",ModelScale", dataManager.get(modelPath + ".ModelScale"));
             HideAndSeekStorage.put(modelId + ",PlayerScale", dataManager.get(modelPath + ".PlayerScale"));
+            HideAndSeekStorage.put(modelId + ",HitboxScale", dataManager.get(modelPath + ".HitboxScale"));
             HideAndSeekStorage.put(modelId + ",PlayerHealth", dataManager.get(modelPath + ".PlayerHealth"));
+
 
             parseAndApplyAnimations(modelId, dataManager);
         }

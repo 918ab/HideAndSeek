@@ -1,5 +1,6 @@
 package main.hideandseek.Event;
 
+import main.hideandseek.Static.ModelEngineAnimation;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -14,7 +15,7 @@ public class HideAndSeekEvent implements Listener {
     public void onPlayerInteractEvent(PlayerInteractEvent event) {
         ItemStack item = event.getItem();
         if (item != null && item.getType() == Material.IRON_NUGGET) {
-            Bukkit.broadcastMessage(item.getItemMeta().getDisplayName());
+            ModelEngineAnimation.ModelStop(event.getPlayer(),item.getItemMeta().getDisplayName());
         }
     }
 
@@ -24,7 +25,7 @@ public class HideAndSeekEvent implements Listener {
         ItemStack item = event.getCurrentItem();
         if (item != null && item.getType() == Material.IRON_NUGGET) {
             event.setCancelled(true);
-            Bukkit.broadcastMessage(item.getItemMeta().getDisplayName());
+            ModelEngineAnimation.ModelStop((Player) event.getWhoClicked(),item.getItemMeta().getDisplayName());
         }
     }
 

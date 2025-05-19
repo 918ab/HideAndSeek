@@ -50,7 +50,7 @@ public class HideAndSeekCommand implements CommandExecutor {
                 List<String> list = f.getNames("HideAndSeek");
                 if(args.length >= 2){
                     if(list.contains(args[1])){
-                        List<String> keyList = new ArrayList<>(Arrays.asList("PlayerScale", "PlayerHealth","ModelScale", "Name"));
+                        List<String> keyList = new ArrayList<>(Arrays.asList("PlayerScale", "PlayerHealth","ModelScale", "HitboxScale","Name"));
                         List<String> Animations = f.getNames("HideAndSeek."+args[1]+".Animation");
                         for(String Animation : Animations){
                             keyList.add("Animation."+Animation);

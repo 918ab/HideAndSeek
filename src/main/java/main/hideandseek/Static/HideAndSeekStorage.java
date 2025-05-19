@@ -41,7 +41,8 @@ public class HideAndSeekStorage {
                     "Name: §e"+f.get("HideAndSeek."+modelId+".Name")
                     +"§f, PHealth: §e"+f.get("HideAndSeek."+modelId+".PlayerHealth")
                     +"§f, PScale: §e"+f.get("HideAndSeek."+modelId+".PlayerScale")
-                    +"§f, MScale: §e"+f.get("HideAndSeek."+modelId+".ModelScale"));
+                    +"§f, MScale: §e"+f.get("HideAndSeek."+modelId+".ModelScale")
+                    +"§f, HScale: §e"+f.get("HideAndSeek."+modelId+".HitboxScale"));
         }
     }
     public static void print(Player player,String name) {

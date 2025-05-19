@@ -59,6 +59,7 @@ public class HideAndSeekCommandTab implements TabCompleter {
                     candidates.add("PlayerScale");
                     candidates.add("PlayerHealth");
                     candidates.add("ModelScale");
+                    candidates.add("HitboxScale");
                     candidates.add("Name");
                 }
             }

@@ -2,7 +2,6 @@ package main.hideandseek.Command;
 
 import main.hideandseek.Static.DataManager;
 import main.hideandseek.Static.HideAndSeekStorage;
-import main.hideandseek.Static.ModelAnimationLoop;
 import main.hideandseek.Static.ModelEngineAnimation;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -13,7 +12,6 @@ import org.bukkit.entity.Player;
 import java.util.*;
 
 public class HideAndSeekCommand implements CommandExecutor {
-    private final Map<Player, ModelAnimationLoop> playerTasks = new HashMap<>();
     public String pr = "§x§0§0§E§2§2§2H§x§0§0§E§5§3§7i§x§0§0§E§8§4§Cd§x§0§0§E§B§6§1e§x§0§0§E§E§7§6A§x§0§0§F§1§8§Cn§x§0§0§F§3§A§1d§x§0§0§F§6§B§6S§x§0§0§F§9§C§Be§x§0§0§F§C§E§0e§x§0§0§F§F§F§5k §f>> ";
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -21,9 +19,6 @@ public class HideAndSeekCommand implements CommandExecutor {
             return true;
         }
         Player player = (Player) sender;
-        //ModelEngineAnimation.ModelStop(player,"death");
-
-
         String arg = null;
         if (args.length == 0) {
             arg = "default";
@@ -101,7 +96,7 @@ public class HideAndSeekCommand implements CommandExecutor {
                                 player.sendMessage(pr + "플레이어를 찾을 수 없습니다");
                             }
                         }else {
-                            player.sendMessage(pr + "닉네임을 입력해주세요");
+                            ModelEngineAnimation.disguisePlayer(player, args[1]);
                         }
                     }else{
                         player.sendMessage(pr + "모델 ID를 알 수 없습니다");
@@ -139,31 +134,6 @@ public class HideAndSeekCommand implements CommandExecutor {
                 }
         }
 
-
-//        if (args.length == 1) {
-//            if (args[0].equalsIgnoreCase("시작")) {
-//
-//                if (playerTasks.containsKey(player) && playerTasks.get(player).isRunning()) {
-//                    return true;//이미 시작됨
-//                }
-//                ModelAnimationLoop modelEnginePlay = new ModelAnimationLoop(player);
-//                modelEnginePlay.startRepeating(new String[]{"walk", "idle","jump"});
-//                playerTasks.put(player, modelEnginePlay);
-//                ModelEngineAnimation.ModelPlayAuto(player,"slash",modelEnginePlay);
-//                //ModelEngineAnimation.ModelPlaySwitch(player,"deatha");
-//                //반복 시작
-//            } else if (args[0].equalsIgnoreCase("중지")) {
-//                //Player player = (Player) sender;
-//                if (playerTasks.containsKey(player)) {
-//                    ModelAnimationLoop modelEnginePlay = playerTasks.get(player);
-//                    modelEnginePlay.stopRepeating();
-//                    playerTasks.remove(player);
-//                    ModelEngineAnimation.ModelStop(player,"deatha");
-//                    ModelEngineAnimation.ModelPlaySwitch(player,"idle");
-//                    //반복 중단
-//                }//반복시작안함
-//            }
-//        }
         return false;
     }
 }

@@ -5,12 +5,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.ticxo.modelengine.api.ModelEngineAPI;
-import com.ticxo.modelengine.api.animation.AnimationPropertyRegistry;
 import com.ticxo.modelengine.api.animation.ModelState;
 import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
-import com.ticxo.modelengine.api.animation.property.IAnimationProperty;
-import com.ticxo.modelengine.api.animation.property.SimpleProperty;
-import com.ticxo.modelengine.api.entity.Dummy;
 import com.ticxo.modelengine.api.entity.data.BukkitEntityData;
 import com.ticxo.modelengine.api.entity.data.IEntityData;
 import com.ticxo.modelengine.api.generator.blueprint.ModelBlueprint;
@@ -33,7 +29,7 @@ public class ModelEngineAnimation {
 
     private static final String pr = "§x§0§0§E§2§2§2H§x§0§0§E§5§3§7i§x§0§0§E§8§4§Cd§x§0§0§E§B§6§1e§x§0§0§E§E§7§6A§x§0§0§F§1§8§Cn§x§0§0§F§3§A§1d§x§0§0§F§6§B§6S§x§0§0§F§9§C§Be§x§0§0§F§C§E§0e§x§0§0§F§F§F§5k §f>> ";
 
-    private static AnimationHandler getHandler(Player player) {
+      public static AnimationHandler getHandler(Player player) {
         ModelEngineAPI api = ModelEngineAPI.getAPI();
         if (api == null) {
             Bukkit.broadcastMessage(pr + "ModelEngineAPI 연결 실패");
@@ -54,35 +50,21 @@ public class ModelEngineAnimation {
 
         return model.getAnimationHandler();
     }
-    public static void ModelStop(Player player, String animation) {
+    public static void Stuck(Player player) {
         AnimationHandler handler = getHandler(player);
         if (handler == null) return;
-        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.IDLE, "noop", 0.2, 0.2, 1.0));
-        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.WALK, "noop", 0.2, 0.2, 1.0));
-        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.JUMP, "noop", 0.2, 0.2, 1.0));
-        //handler.stopAnimation(animation);
-
-        handler.playAnimation(animation, 0.3, 0.3, 1, false);
-        Bukkit.broadcastMessage(player+"/"+animation);
-        player.sendMessage("stop / " + animation);
+        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.IDLE, "idle", 0.2, 0.2, 1.0));
+        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.WALK, "idle", 0.2, 0.2, 1.0));
+        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.JUMP, "idle", 0.2, 0.2, 1.0));
     }
-    public static void ModelPlayAuto(Player player, String animation, ModelAnimationLoop loop) {
+    public static void unStuck(Player player) {
         AnimationHandler handler = getHandler(player);
         if (handler == null) return;
-
-        handler.playAnimation(animation, 0.3, 0.3, 1, false);
-        player.sendMessage("play / " + animation);
-
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (loop != null && loop.isRunning()) {
-                    loop.stopRepeating();
-                    handler.playAnimation("idle", 0.3, 0.3, 1, false);
-                }
-            }
-        }.runTaskLater(Bukkit.getPluginManager().getPlugin("HideAndseek"), 40);
+        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.IDLE, "idle", 0.2, 0.2, 1.0));
+        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.WALK, "walk", 0.2, 0.2, 1.0));
+        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.JUMP, "jump", 0.2, 0.2, 1.0));
     }
+
 
     public static void undisguisePlayer(Player player){
         ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(player.getUniqueId());
@@ -92,6 +74,8 @@ public class ModelEngineAnimation {
             player.setHealth(player.getMaxHealth());
             player.setFoodLevel(20);
             player.setSaturation(20.0f);
+            HideAndSeekStorage.remove("[Player]"+player.getName()+",Animation");
+            HideAndSeekStorage.remove("[Player]"+player.getName()+",Model");
             player.getAttribute(Attribute.GENERIC_SCALE).setBaseValue(1);
             modeledEntity.markRemoved();
             ModelEngineAPI.getEntityHandler().setForcedInvisible(player, false);
@@ -126,7 +110,7 @@ public class ModelEngineAnimation {
         });
         player.setMaxHealth(Double.parseDouble(HideAndSeekStorage.get(modelId+",PlayerHealth").toString()));
         player.getAttribute(Attribute.GENERIC_SCALE).setBaseValue(Double.parseDouble(HideAndSeekStorage.get(modelId+",PlayerScale").toString()));
-
+        HideAndSeekStorage.put("[Player]"+player.getName()+",Model",modelId);
         List<String> list = HideAndSeekStorage.getList("[ModelEngine]"+modelId);
         if(list.size() > 32){
             Bukkit.getLogger().info("§c 애니메이션이 너무 많습니다 ("+modelId+")");
@@ -205,7 +189,6 @@ public class ModelEngineAnimation {
 
     private static void parseAndApplyAnimations(String modelId, DataManager dataManager) {
         File modelFile = new File("plugins/ModelEngine/blueprints/" + modelId + ".bbmodel");
-
         try (FileReader reader = new FileReader(modelFile)) {
             JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
             JsonElement animationsElement = json.get("animations");

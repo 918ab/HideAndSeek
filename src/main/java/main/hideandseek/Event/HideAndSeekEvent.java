@@ -1,6 +1,5 @@
 package main.hideandseek.Event;
 
-import com.ticxo.modelengine.api.animation.ModelState;
 import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
 import main.hideandseek.Static.HideAndSeekStorage;
 import main.hideandseek.Static.ModelEngineAnimation;

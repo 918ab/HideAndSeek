@@ -1,19 +1,14 @@
 package main.hideandseek;
 
 
-
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import main.hideandseek.Command.HideAndSeekCommand;
 import main.hideandseek.Command.HideAndSeekCommandTab;
 import main.hideandseek.Event.HideAndSeekEvent;
 import main.hideandseek.Static.DataManager;
 import main.hideandseek.Static.ModelEngineAnimation;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
-
-import java.io.File;
-import java.io.IOException;
 
 public final class HideAndSeek extends JavaPlugin {
 

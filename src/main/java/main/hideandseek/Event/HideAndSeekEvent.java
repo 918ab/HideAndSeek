@@ -1,6 +1,6 @@
 package main.hideandseek.Event;
 
-import com.ticxo.modelengine.api.ModelEngineAPI;
+import com.ticxo.modelengine.api.animation.ModelState;
 import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
 import main.hideandseek.Static.HideAndSeekStorage;
 import main.hideandseek.Static.ModelEngineAnimation;
@@ -22,11 +22,22 @@ public class HideAndSeekEvent implements Listener {
     public void onPlayerInteractEvent(PlayerInteractEvent event) {
         ItemStack item = event.getItem();
         if (item != null && item.getType() == Material.IRON_NUGGET) {
-            event.setCancelled(true);
             Player player = event.getPlayer();
-            if(HideAndSeekStorage.get("[Player]"+ player.getName()+",Animation") == null
-                    ||(Boolean) HideAndSeekStorage.get("[Player]"+player.getName()+",Animation") != true){
-                setCustomModelData(player,item);
+            AnimationHandler handler = ModelEngineAnimation.getHandler(player);
+            if (handler != null){
+                event.setCancelled(true);
+            }else{
+                return;
+            }
+
+            if (HideAndSeekStorage.get("[Player]"+player.getName()+",Animation") != null
+                    && (Boolean) HideAndSeekStorage.get("[Player]"+player.getName()+",Animation") == true) {
+                if(item.getItemMeta().getCustomModelData() == 4){
+                    setCustomModelData(player, item);
+                    player.getInventory().close();
+                }
+            } else {
+                setCustomModelData(player, item);
                 player.getInventory().close();
             }
         }
@@ -38,10 +49,21 @@ public class HideAndSeekEvent implements Listener {
         ItemStack item = event.getCurrentItem();
         if (item != null && item.getType() == Material.IRON_NUGGET) {
             Player player = (Player) event.getWhoClicked();
-            event.setCancelled(true);
-            if(HideAndSeekStorage.get("[Player]"+player.getName()+",Animation") == null
-                    ||(Boolean) HideAndSeekStorage.get("[Player]"+player.getName()+",Animation") != true){
-                setCustomModelData(player,item);
+            AnimationHandler handler = ModelEngineAnimation.getHandler(player);
+            if (handler != null){
+                event.setCancelled(true);
+            }else{
+                return;
+            }
+
+            if (HideAndSeekStorage.get("[Player]"+player.getName()+",Animation") != null
+                    && (Boolean) HideAndSeekStorage.get("[Player]"+player.getName()+",Animation") == true) {
+                if(item.getItemMeta().getCustomModelData() == 4){
+                    setCustomModelData(player, item);
+                    player.getInventory().close();
+                }
+            } else {
+                setCustomModelData(player, item);
                 player.getInventory().close();
             }
         }
@@ -53,21 +75,24 @@ public class HideAndSeekEvent implements Listener {
             itemMeta.setCustomModelData(2);
         }else if(itemMeta.getCustomModelData() == 3){
             itemMeta.setCustomModelData(4);
-        }else{
+        }else if(itemMeta.getCustomModelData() == 4){
+            itemMeta.setCustomModelData(3);
+        }else {
             return;
         }
-        item.setItemMeta(itemMeta);
-        HideAndSeekStorage.put("[Player]"+player.getName()+",Animation",true);
-        String animation = ChatColor.stripColor(item.getItemMeta().getDisplayName());
+
         AnimationHandler handler = ModelEngineAnimation.getHandler(player);
         if (handler == null) return;
+        item.setItemMeta(itemMeta);
+        String animation = ChatColor.stripColor(item.getItemMeta().getDisplayName());
         if(itemMeta.getCustomModelData() == 2){
             //auto
+            HideAndSeekStorage.put("[Player]"+player.getName()+",Animation",true);
             ModelEngineAnimation.Stuck(player);
             handler.playAnimation(animation, 0.3, 0.3, 1, false);
             String modelID = HideAndSeekStorage.get("[Player]"+player.getName()+",Model").toString();
             double count = Math.round((double) HideAndSeekStorage.get("[Animation]"+modelID+","+animation));
-            long time = (long) count * 20 + 3;
+            long time = (long) count * 20;
             new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -75,16 +100,41 @@ public class HideAndSeekEvent implements Listener {
                     item.setItemMeta(itemMeta);
                     ModelEngineAnimation.unStuck(player);
                     handler.stopAnimation(animation);
+                    handler.playAnimation("idle", 0.3, 0.3, 1, false);
                     HideAndSeekStorage.remove("[Player]"+player.getName()+",Animation");
                 }
             }.runTaskLater(Bukkit.getPluginManager().getPlugin("HideAndseek"), time);
-        }else{
-            //switch
+        }if(itemMeta.getCustomModelData() == 4){
+            //switch on
+            handler.playAnimation(animation, 0.3, 0.3, 1, false);
+            HideAndSeekStorage.put("[Player]"+player.getName()+",Animation", true);
+            BukkitRunnable runnable = new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (!player.isOnline() || !((Boolean) HideAndSeekStorage.get("[Player]"+player.getName()+",Animation"))) {
+                        this.cancel();
+                        return;
+                    }
+                    player.sendActionBar("§a애니메이션 실행중");
+                }
+            };
+            runnable.runTaskTimer(Bukkit.getPluginManager().getPlugin("HideAndseek"), 0, 5);
+            HideAndSeekStorage.put("[Player]"+player.getName()+",ActionbarRunnable", runnable);
+        }if(itemMeta.getCustomModelData() == 3){
+            //switch off
+            ModelEngineAnimation.unStuck(player);
+            handler.stopAnimation(animation);
+            handler.playAnimation("idle", 0.3, 0.3, 1, false);
+            HideAndSeekStorage.remove("[Player]"+player.getName()+",Animation");
 
+            Object runnableObj = HideAndSeekStorage.get("[Player]"+player.getName()+",ActionbarRunnable");
+            if (runnableObj instanceof BukkitRunnable) {
+                ((BukkitRunnable) runnableObj).cancel();
+            }
+            player.sendActionBar(" ");
+            HideAndSeekStorage.remove("[Player]"+player.getName()+",ActionbarRunnable");
         }
     }
-
-
     @EventHandler
     public void onPlayerJoinEvent(PlayerJoinEvent event){
         HideAndSeekStorage.remove("[Player]"+event.getPlayer()+",Animation");

@@ -53,9 +53,10 @@ public class ModelEngineAnimation {
     public static void Stuck(Player player) {
         AnimationHandler handler = getHandler(player);
         if (handler == null) return;
-        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.IDLE, "idle", 0.2, 0.2, 1.0));
-        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.WALK, "idle", 0.2, 0.2, 1.0));
-        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.JUMP, "idle", 0.2, 0.2, 1.0));
+        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.IDLE, "abcdefg", 0.2, 0.2, 1.0));
+        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.WALK, "abcdefg", 0.2, 0.2, 1.0));
+        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.JUMP, "abcdefg", 0.2, 0.2, 1.0));
+
     }
     public static void unStuck(Player player) {
         AnimationHandler handler = getHandler(player);

@@ -35,7 +35,8 @@
 ```yaml
 PlayerScale: 0.5        # 플레이어 크기 조절 (기본 1.0)
 ModelScale: 0.5         # 모델 크기 조절 (기본 1.0)
-PlayerHealth: 20        # 플레이어 기본 체력 설정
+HitBoxScale : 1.        # 모델 히트박스 크기 조절 (기본 1.0)
+PlayerHealth: 20        # 플레이어 기본 체력 설정 (기본 20)
 Animation:
   death: switch         # 애니메이션 타입 설정 (auto / switch) (자동 설정)
 ```

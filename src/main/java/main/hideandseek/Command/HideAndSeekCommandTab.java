@@ -1,6 +1,9 @@
 package main.hideandseek.Command;
 
+import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
 import main.hideandseek.Static.DataManager;
+import main.hideandseek.Static.HideAndSeekStorage;
+import main.hideandseek.Static.ModelEngineAnimation;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -29,12 +32,16 @@ public class HideAndSeekCommandTab implements TabCompleter {
                     candidates.add("disguise");
                     candidates.add("undisguise");
                     candidates.add("setting");
+                    candidates.add("play");
+                    candidates.add("stop");
                 } else {
                     candidates.add("리로드");
                     candidates.add("정보");
                     candidates.add("변신");
                     candidates.add("변신풀기");
                     candidates.add("설정");
+                    candidates.add("실행");
+                    candidates.add("정지");
                 }
 
             }
@@ -43,16 +50,33 @@ public class HideAndSeekCommandTab implements TabCompleter {
                     List<String> list = f.getNames("HideAndSeek");
                     candidates.addAll(list);
                 }
-                if(args[0].equals("변신풀기") || args[0].equals("undisguise")) {
+                if(args[0].equals("변신풀기") || args[0].equals("undisguise") || args[0].equals("실행") || args[0].equals("play") || args[0].equals("정지") || args[0].equals("stop")) {
                     for(Player player : Bukkit.getOnlinePlayers()){
                         candidates.add(player.getName());
                     }
                 }
+
             }
             if (args.length == 3) {
                 if(args[0].equals("변신") || args[0].equals("disguise")) {
                     for(Player player : Bukkit.getOnlinePlayers()){
                         candidates.add(player.getName());
+                    }
+                }
+                if(args[0].equals("실행") || args[0].equals("play") || args[0].equals("정지") || args[0].equals("stop")) {
+                    Player target = Bukkit.getPlayer(args[1]);
+                    if(target == null){
+                        completions.add("["+args[1]+"] null");
+                        return completions;
+                    }
+                    AnimationHandler handler = ModelEngineAnimation.getHandler(target);
+                    if (handler == null){
+                        completions.add("["+args[1]+"] 변신중아님");
+                        return completions;
+                    }else{
+                        String model = HideAndSeekStorage.get("[Player]"+target.getName()+",Model").toString();
+                        List<String> list = f.getNames("HideAndSeek."+model+".Animation");
+                        candidates.addAll(list);
                     }
                 }
                 if(args[0].equals("설정") || args[0].equals("setting")) {

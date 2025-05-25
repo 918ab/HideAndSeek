@@ -4,6 +4,7 @@ main: main.hideandseek.HideAndSeek
 api-version: '1.21'
 depend:
   - ModelEngine
+  - Skript
 commands:
   숨바꼭질:
     aliases:

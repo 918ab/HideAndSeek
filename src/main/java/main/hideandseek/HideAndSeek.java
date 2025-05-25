@@ -1,10 +1,13 @@
 package main.hideandseek;
 
 
+import ch.njol.skript.Skript;
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import main.hideandseek.Command.HideAndSeekCommand;
 import main.hideandseek.Command.HideAndSeekCommandTab;
 import main.hideandseek.Event.HideAndSeekEvent;
+import main.hideandseek.SkriptAPI.PlayAnimation;
+import main.hideandseek.SkriptAPI.StopAnimation;
 import main.hideandseek.Static.DataManager;
 import main.hideandseek.Static.ModelEngineAnimation;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -25,6 +28,10 @@ public final class HideAndSeek extends JavaPlugin {
         getCommand("숨바꼭질").setTabCompleter(new HideAndSeekCommandTab());
         getServer().getPluginManager().registerEvents(new HideAndSeekEvent(), this);
         DataManager f = new DataManager(this, "Data.yml");
+
+        Skript.registerEffect(PlayAnimation.class, "play animation of %player% to %string%");
+        Skript.registerEffect(StopAnimation.class, "stop animation of %player% to %string%");
+
         f.createFileIfNotExists();
         new BukkitRunnable() {
             @Override

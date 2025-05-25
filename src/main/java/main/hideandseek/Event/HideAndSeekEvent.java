@@ -89,7 +89,7 @@ public class HideAndSeekEvent implements Listener {
             HideAndSeekStorage.put("[Player]"+player.getName()+",Animation",true);
             ModelEngineAnimation.Stuck(player);
             handler.playAnimation(animation, 0.3, 0.3, 1, false);
-            String modelID = HideAndSeekStorage.get("[Player]"+player.getName()+",Model").toString();
+            String modelID = ModelEngineAnimation.getCurrentModelName(player);
             double count = Math.round((double) HideAndSeekStorage.get("[Animation]"+modelID+","+animation));
             long time = (long) count * 20;
             new BukkitRunnable() {
@@ -137,6 +137,5 @@ public class HideAndSeekEvent implements Listener {
     @EventHandler
     public void onPlayerJoinEvent(PlayerJoinEvent event){
         HideAndSeekStorage.remove("[Player]"+event.getPlayer()+",Animation");
-        HideAndSeekStorage.remove("[Player]"+event.getPlayer()+",Model");
     }
 }

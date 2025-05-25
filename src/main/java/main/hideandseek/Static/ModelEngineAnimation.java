@@ -20,6 +20,7 @@ import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.FileReader;
@@ -49,6 +50,21 @@ public class ModelEngineAnimation {
 
         return model.getAnimationHandler();
     }
+
+    public static String getCurrentModelName(Player player) {
+        ModelEngineAPI api = ModelEngineAPI.getAPI();
+        if (api == null) {
+            Bukkit.broadcastMessage(pr + "ModelEngineAPI 연결 실패");
+            return null;
+        }
+
+        ModeledEntity entity = api.getModelUpdaters().getModeledEntity(player.getUniqueId());
+        if (entity == null) {
+            player.sendMessage(pr + "적용된 모델 없음");
+            return null;
+        }
+        return entity.getModels().keySet().stream().findFirst().orElse(null);
+    }
     public static void Stuck(Player player) {
         AnimationHandler handler = getHandler(player);
         if (handler == null) return;
@@ -74,12 +90,16 @@ public class ModelEngineAnimation {
             player.setHealth(player.getMaxHealth());
             player.setFoodLevel(20);
             player.setSaturation(20.0f);
-            HideAndSeekStorage.remove("[Player]"+player.getName()+",Animation");
-            HideAndSeekStorage.remove("[Player]"+player.getName()+",Model");
             player.getAttribute(Attribute.GENERIC_SCALE).setBaseValue(1);
             modeledEntity.markRemoved();
             ModelEngineAPI.getEntityHandler().setForcedInvisible(player, false);
             ModelEngineAPI.getEntityHandler().forceSpawn(player);
+            Object runnableObj = HideAndSeekStorage.get("[Player]"+player.getName()+",ActionbarRunnable");
+            if (runnableObj instanceof BukkitRunnable) {
+                ((BukkitRunnable) runnableObj).cancel();
+            }
+            HideAndSeekStorage.remove("[Player]"+player.getName()+",ActionbarRunnable");
+            HideAndSeekStorage.remove("[Player]"+player+",Animation");
         }
     }
     public static void disguisePlayer(Player player, String modelId) {
@@ -110,7 +130,6 @@ public class ModelEngineAnimation {
         });
         player.setMaxHealth(Double.parseDouble(HideAndSeekStorage.get(modelId+",PlayerHealth").toString()));
         player.getAttribute(Attribute.GENERIC_SCALE).setBaseValue(Double.parseDouble(HideAndSeekStorage.get(modelId+",PlayerScale").toString()));
-        HideAndSeekStorage.put("[Player]"+player.getName()+",Model",modelId);
         List<String> list = HideAndSeekStorage.getList("[ModelEngine]"+modelId);
         if(list.size() > 32){
             Bukkit.getLogger().info("§c 애니메이션이 너무 많습니다 ("+modelId+")");

@@ -1,5 +1,6 @@
 package main.hideandseek.Command;
 
+import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
 import main.hideandseek.Static.DataManager;
 import main.hideandseek.Static.HideAndSeekStorage;
 import main.hideandseek.Static.ModelEngineAnimation;
@@ -9,7 +10,9 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class HideAndSeekCommand implements CommandExecutor {
     public String pr = "§x§0§0§E§2§2§2H§x§0§0§E§5§3§7i§x§0§0§E§8§4§Cd§x§0§0§E§B§6§1e§x§0§0§E§E§7§6A§x§0§0§F§1§8§Cn§x§0§0§F§3§A§1d§x§0§0§F§6§B§6S§x§0§0§F§9§C§Be§x§0§0§F§C§E§0e§x§0§0§F§F§F§5k §f>> ";
@@ -118,18 +121,81 @@ public class HideAndSeekCommand implements CommandExecutor {
                     ModelEngineAnimation.undisguisePlayer(player);
                 }
                 break;
+            case "play":
+            case "실행":
+                if(args.length >= 2) {
+                    if(args.length >= 3) {
+                        Player target = Bukkit.getPlayer(args[1]);
+                        if (target != null) {
+                            AnimationHandler handler = ModelEngineAnimation.getHandler(target);
+                            DataManager fa = new DataManager(Bukkit.getPluginManager().getPlugin("HideAndseek"), "Data.yml");
+                            if (handler == null) {
+                                player.sendMessage(pr + target.getName() + " 변신중 아님");
+                            } else {
+                                String model = ModelEngineAnimation.getCurrentModelName(target);
+                                List<String> Animation = fa.getNames("HideAndSeek." + model + ".Animation");
+                                if (Animation.contains(args[2])) {
+                                    handler.playAnimation(args[2], 0.3, 0.3, 1, false);
+                                } else {
+                                    player.sendMessage(pr + "애니메이션 찾을 수 없음");
+                                }
+                            }
+                        } else {
+                            player.sendMessage(pr + "플레이어를 찾을 수 없습니다");
+                        }
+                    }else{
+                        player.sendMessage(pr+"애니메이션 이름을 입력해주세요");
+                    }
+                }else {
+                    player.sendMessage(pr + "닉네임을 입력해주세요");
+                }
+                break;
+            case "stop":
+            case "정지":
+                if(args.length >= 2) {
+                    if(args.length >= 2) {
+                        Player target = Bukkit.getPlayer(args[1]);
+                        if (target != null) {
+                            AnimationHandler handler = ModelEngineAnimation.getHandler(target);
+                            DataManager fa = new DataManager(Bukkit.getPluginManager().getPlugin("HideAndseek"), "Data.yml");
+                            if (handler == null) {
+                                player.sendMessage(pr + target.getName() + " 변신중 아님");
+                            } else {
+                                String model = ModelEngineAnimation.getCurrentModelName(target);
+                                List<String> Animation = fa.getNames("HideAndSeek." + model + ".Animation");
+                                if (Animation.contains(args[2])) {
+                                    handler.stopAnimation(args[2]);
+                                } else {
+                                    player.sendMessage(pr + "애니메이션 찾을 수 없음");
+                                }
+                            }
+                        } else {
+                            player.sendMessage(pr + "플레이어를 찾을 수 없습니다");
+                        }
+                    }else{
+                        player.sendMessage(pr+"애니메이션 이름을 입력해주세요");
+                    }
+                }else {
+                    player.sendMessage(pr + "닉네임을 입력해주세요");
+                }
+                break;
+
             default:
                 if (label.equalsIgnoreCase("has") || label.equalsIgnoreCase("hideandseek")){
                     player.sendMessage(pr + "/hideandseek reload");
                     player.sendMessage(pr + "/hideandseek info");
                     player.sendMessage(pr + "/hideandseek disguise (ModelId) (Player)");
                     player.sendMessage(pr + "/hideandseek undisguise (Player)");
+                    player.sendMessage(pr + "/hideandseek play (Player) (AnimationName)");
+                    player.sendMessage(pr + "/hideandseek stop (Player) (AnimationName)");
                     player.sendMessage(pr + "/hideandseek setting (ModelId) (Key) (Value)");
                 }else{
                     player.sendMessage(pr + "/숨바꼭질 리로드");
                     player.sendMessage(pr + "/숨바꼭질 정보");
                     player.sendMessage(pr + "/숨바꼭질 변신 (모델ID) (닉네임)");
                     player.sendMessage(pr + "/숨바꼭질 변신풀기 (닉네임)");
+                    player.sendMessage(pr + "/숨바꼭질 실행 (닉네임) (애니메이션이름)");
+                    player.sendMessage(pr + "/숨바꼭질 정지 (닉네임) (애니메이션이름)");
                     player.sendMessage(pr + "/숨바꼭질 설정 (모델ID) (이름) (값)");
                 }
         }

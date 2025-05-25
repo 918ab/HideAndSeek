@@ -26,8 +26,8 @@
 | `/hideandseek info`                  | 플러그인 정보 및 상태 확인                   |
 | `/hideandseek disguise (ModelId) (Player)`    | 특정 플레이어에게 지정한 모델로 변신시키기       |
 | `/hideandseek undisguise (Player)`               | 특정 플레이어의 변신 해제                      |
-| `/hideandseek play (Player) (AnimationName)`  | 모델별 설정 값 변경 (예: 애니메이션 타입, 크기 등) |
-| `/hideandseek stop (Player) (AnimationName)`  | 모델별 설정 값 변경 (예: 애니메이션 타입, 크기 등) |
+| `/hideandseek play (Player) (AnimationName)`  | 애니메이션 Play |
+| `/hideandseek stop (Player) (AnimationName)`  | 애니메이션 Stop |
 | `/hideandseek setting (ModelId) (Key) (Value)`  | 모델별 설정 값 변경 (예: 애니메이션 타입, 크기 등) |
 
 

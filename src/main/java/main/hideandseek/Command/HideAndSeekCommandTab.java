@@ -29,6 +29,7 @@ public class HideAndSeekCommandTab implements TabCompleter {
                 if (label.equalsIgnoreCase("has") || label.equalsIgnoreCase("hideandseek")) {
                     candidates.add("reload");
                     candidates.add("info");
+                    candidates.add("random");
                     candidates.add("disguise");
                     candidates.add("undisguise");
                     candidates.add("setting");
@@ -37,6 +38,7 @@ public class HideAndSeekCommandTab implements TabCompleter {
                 } else {
                     candidates.add("리로드");
                     candidates.add("정보");
+                    candidates.add("랜덤");
                     candidates.add("변신");
                     candidates.add("변신풀기");
                     candidates.add("설정");
@@ -71,7 +73,7 @@ public class HideAndSeekCommandTab implements TabCompleter {
                     }
                     AnimationHandler handler = ModelEngineAnimation.getHandler(target);
                     if (handler == null){
-                        completions.add("["+args[1]+"] 변신중아님");
+                        completions.add("변신중아님");
                         return completions;
                     }else{
                         String model = HideAndSeekStorage.get("[Player]"+target.getName()+",Model").toString();

@@ -24,11 +24,13 @@ public final class HideAndSeek extends JavaPlugin {
             getLogger().warning("모델엔진 플러그인 찾을 수 없음");
             getServer().getPluginManager().disablePlugin(this);
         }
-        getCommand("숨바꼭질").setExecutor(new HideAndSeekCommand());
+        getCommand("숨바꼭질").setExecutor(new HideAndSeekCommand(this));
         getCommand("숨바꼭질").setTabCompleter(new HideAndSeekCommandTab());
-        getServer().getPluginManager().registerEvents(new HideAndSeekEvent(), this);
+        getServer().getPluginManager().registerEvents(new HideAndSeekEvent(this), this);
         DataManager f = new DataManager(this, "Data.yml");
-
+        if(f.get("Random") == null) {
+            f.set("Random", "ARMOR_STAND");
+        }
         Skript.registerEffect(PlayAnimation.class, "play animation of %player% to %string%");
         Skript.registerEffect(StopAnimation.class, "stop animation of %player% to %string%");
 

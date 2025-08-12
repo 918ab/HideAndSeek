@@ -5,6 +5,7 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.util.Kleenean;
 import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
+import com.ticxo.modelengine.api.model.ActiveModel;
 import main.hideandseek.Static.HideAndSeekStorage;
 import main.hideandseek.Static.ModelEngineAnimation;
 import org.bukkit.Bukkit;
@@ -47,6 +48,7 @@ public class PlayAnimation extends Effect {
         String modelID = ModelEngineAnimation.getCurrentModelName(player);
         double count = Math.round((double) HideAndSeekStorage.get("[Animation]"+modelID+","+animation));
         long time = (long) count * 20;
+
         new BukkitRunnable() {
             @Override
             public void run() {

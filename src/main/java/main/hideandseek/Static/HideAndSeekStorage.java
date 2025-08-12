@@ -7,7 +7,7 @@ import java.util.*;
 
 public class HideAndSeekStorage {
     private static final String pr = "§x§0§0§E§2§2§2H§x§0§0§E§5§3§7i§x§0§0§E§8§4§Cd§x§0§0§E§B§6§1e§x§0§0§E§E§7§6A§x§0§0§F§1§8§Cn§x§0§0§F§3§A§1d§x§0§0§F§6§B§6S§x§0§0§F§9§C§Be§x§0§0§F§C§E§0e§x§0§0§F§F§F§5k §f>> ";
-    private static Map<String,Object> Storage = new HashMap<>();
+    public static Map<String,Object> Storage = new HashMap<>();
     public static void put(String key, Object value){
         Storage.put(key,value);
     }

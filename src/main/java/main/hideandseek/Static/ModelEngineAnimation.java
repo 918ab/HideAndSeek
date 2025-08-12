@@ -7,6 +7,7 @@ import com.google.gson.JsonParser;
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.animation.ModelState;
 import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
+import com.ticxo.modelengine.api.entity.BukkitEntity;
 import com.ticxo.modelengine.api.entity.data.BukkitEntityData;
 import com.ticxo.modelengine.api.entity.data.IEntityData;
 import com.ticxo.modelengine.api.generator.blueprint.ModelBlueprint;
@@ -16,8 +17,11 @@ import com.ticxo.modelengine.api.model.bone.BoneBehaviorTypes;
 import com.ticxo.modelengine.api.model.bone.type.PlayerLimb;
 import com.ticxo.modelengine.core.command.ModelOptionParser;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -28,8 +32,19 @@ import java.util.List;
 public class ModelEngineAnimation {
 
     private static final String pr = "§x§0§0§E§2§2§2H§x§0§0§E§5§3§7i§x§0§0§E§8§4§Cd§x§0§0§E§B§6§1e§x§0§0§E§E§7§6A§x§0§0§F§1§8§Cn§x§0§0§F§3§A§1d§x§0§0§F§6§B§6S§x§0§0§F§9§C§Be§x§0§0§F§C§E§0e§x§0§0§F§F§F§5k §f>> ";
-
-      public static AnimationHandler getHandler(Player player) {
+    public static ModeledEntity getModeledEntity(Player player) {
+        ModelEngineAPI api = ModelEngineAPI.getAPI();
+        if (api == null) {
+            Bukkit.broadcastMessage(pr + "ModelEngineAPI 연결 실패");
+            return null;
+        }
+        ModeledEntity entity = api.getModelUpdaters().getModeledEntity(player.getUniqueId());
+        if (entity == null) {
+            return null;
+        }
+        return entity;
+    }
+    public static ActiveModel getActiveModel(Player player) {
         ModelEngineAPI api = ModelEngineAPI.getAPI();
         if (api == null) {
             Bukkit.broadcastMessage(pr + "ModelEngineAPI 연결 실패");
@@ -38,16 +53,31 @@ public class ModelEngineAnimation {
 
         ModeledEntity entity = api.getModelUpdaters().getModeledEntity(player.getUniqueId());
         if (entity == null) {
-            player.sendMessage(pr + "적용된 모델 없음");
             return null;
         }
 
         ActiveModel model = entity.getModels().values().stream().findFirst().orElse(null);
         if (model == null) {
-            player.sendMessage(pr + "적용된 모델 없음");
+            return null;
+        }
+        return model;
+    }
+    public static AnimationHandler getHandler(Player player) {
+        ModelEngineAPI api = ModelEngineAPI.getAPI();
+        if (api == null) {
+            Bukkit.broadcastMessage(pr + "ModelEngineAPI 연결 실패");
             return null;
         }
 
+        ModeledEntity entity = api.getModelUpdaters().getModeledEntity(player.getUniqueId());
+        if (entity == null) {
+            return null;
+        }
+
+        ActiveModel model = entity.getModels().values().stream().findFirst().orElse(null);
+        if (model == null) {
+            return null;
+        }
         return model.getAnimationHandler();
     }
 
@@ -68,9 +98,9 @@ public class ModelEngineAnimation {
     public static void Stuck(Player player) {
         AnimationHandler handler = getHandler(player);
         if (handler == null) return;
-        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.IDLE, "abcdefg", 0.2, 0.2, 1.0));
-        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.WALK, "abcdefg", 0.2, 0.2, 1.0));
-        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.JUMP, "abcdefg", 0.2, 0.2, 1.0));
+        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.IDLE, "zxcv", 0.2, 0.2, 1.0));
+        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.WALK, "zxcv", 0.2, 0.2, 1.0));
+        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.JUMP, "zxcv", 0.2, 0.2, 1.0));
 
     }
     public static void unStuck(Player player) {
@@ -79,17 +109,21 @@ public class ModelEngineAnimation {
         handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.IDLE, "idle", 0.2, 0.2, 1.0));
         handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.WALK, "walk", 0.2, 0.2, 1.0));
         handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.JUMP, "jump", 0.2, 0.2, 1.0));
+        handler.stopAnimation("idle");
+        handler.stopAnimation("walk");
+        handler.stopAnimation("jump");
     }
 
 
     public static void undisguisePlayer(Player player){
         ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(player.getUniqueId());
+        player.getInventory().remove(Material.IRON_NUGGET);
+        player.setMaxHealth(20);
+        player.setHealth(player.getMaxHealth());
+        player.setFoodLevel(20);
+        player.setSaturation(20.0f);
         if(modeledEntity != null) {
             player.getInventory().clear();
-            player.setMaxHealth(20);
-            player.setHealth(player.getMaxHealth());
-            player.setFoodLevel(20);
-            player.setSaturation(20.0f);
             player.getAttribute(Attribute.GENERIC_SCALE).setBaseValue(1);
             modeledEntity.markRemoved();
             ModelEngineAPI.getEntityHandler().setForcedInvisible(player, false);
@@ -165,6 +199,22 @@ public class ModelEngineAnimation {
         }
 
     }
+    public static void invisible(Player player){
+        ModeledEntity en = ModelEngineAnimation.getModeledEntity(player);
+        IEntityData data = en.getBase().getData();
+        if (data instanceof BukkitEntityData) {
+            BukkitEntityData bukkitData = (BukkitEntityData) data;
+            bukkitData.getTracked().removeForcedPairing(player.getUniqueId());
+        }
+    }
+    public static void uninvisible(Player player){
+        ModeledEntity en = ModelEngineAnimation.getModeledEntity(player);
+        IEntityData data = en.getBase().getData();
+        if (data instanceof BukkitEntityData) {
+            BukkitEntityData bukkitData = (BukkitEntityData) data;
+            bukkitData.getTracked().addForcedPairing(player.getUniqueId());
+        }
+    }
     public static void ModelReload() {
         DataManager dataManager = new DataManager(Bukkit.getPluginManager().getPlugin("HideAndseek"), "Data.yml");
         File blueprintDir = new File("plugins/ModelEngine/blueprints/");
@@ -179,7 +229,13 @@ public class ModelEngineAnimation {
             Bukkit.broadcastMessage("§c디렉토리에 파일이 없습니다");
             return;
         }
-
+        String entityName = dataManager.get("Random").toString();
+        try {
+            EntityType entityType = EntityType.valueOf(entityName);
+            HideAndSeekStorage.put("Random",entityType);
+        } catch (IllegalArgumentException e) {
+            Bukkit.broadcastMessage("§c잘못된 이름 : "+entityName);
+        }
         for (File file : files) {
             if (!file.getName().endsWith(".bbmodel")) continue;
 
@@ -216,7 +272,6 @@ public class ModelEngineAnimation {
                 Bukkit.broadcastMessage("§canimations 존재하지 않음(" + modelId + ")");
                 return;
             }
-
             JsonArray animations = animationsElement.getAsJsonArray();
             if (animations.size() == 0) {
                 Bukkit.broadcastMessage("§c애니메이션 없음(" + modelId + ")");
@@ -243,6 +298,37 @@ public class ModelEngineAnimation {
             Bukkit.broadcastMessage("§c모델 로딩 오류(" + modelId + ") : " + e.getMessage());
         }
     }
+    public static void spawnModeledEntity(Player player, String blueprintName, EntityType entityType) {
+        if (entityType == null) {
+            entityType = EntityType.PIG;
+        }
+        Class<? extends Entity> clazz = entityType.getEntityClass();
+        if (clazz == null) {
+            return;
+        }
 
+        ModelBlueprint blueprint = ModelEngineAPI.getBlueprint(blueprintName);
+        if (blueprint == null) {
+            return;
+        }
+        Location location = player.getLocation();
+        player.getWorld().spawn(location, clazz, (entity) -> {
+            BukkitEntity base = new BukkitEntity(entity);
+            base.getBodyRotationController().setYBodyRot(location.getYaw());
+            ModeledEntity modeledEntity = ModelEngineAPI.createModeledEntity(base);
+            modeledEntity.setBaseEntityVisible(false);
+            ActiveModel activeModel = ModelEngineAPI.createActiveModel(blueprint);
+            activeModel.setAutoRendererInitialization(false);
+            ModelOptionParser options = new ModelOptionParser();
+            options.applyDisguiseOptions(activeModel);
+            modeledEntity.addModel(activeModel, true).ifPresent(ActiveModel::destroy);
+            activeModel.getBones().values().forEach((modelBone) -> {
+                modelBone.getBoneBehavior(BoneBehaviorTypes.PLAYER_LIMB).ifPresent((playerLimb) -> {
+                    ((PlayerLimb)playerLimb).setTexture(player);
+                });
+            });
+            activeModel.initializeRenderer();
+        });
+    }
 }
 

@@ -1,7 +1,9 @@
 package main.hideandseek.Command;
 
 import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
+import main.hideandseek.HideAndSeek;
 import main.hideandseek.Static.DataManager;
+import main.hideandseek.Static.GuiInventory;
 import main.hideandseek.Static.HideAndSeekStorage;
 import main.hideandseek.Static.ModelEngineAnimation;
 import org.bukkit.Bukkit;
@@ -15,7 +17,11 @@ import java.util.Arrays;
 import java.util.List;
 
 public class HideAndSeekCommand implements CommandExecutor {
-    public String pr = "§x§0§0§E§2§2§2H§x§0§0§E§5§3§7i§x§0§0§E§8§4§Cd§x§0§0§E§B§6§1e§x§0§0§E§E§7§6A§x§0§0§F§1§8§Cn§x§0§0§F§3§A§1d§x§0§0§F§6§B§6S§x§0§0§F§9§C§Be§x§0§0§F§C§E§0e§x§0§0§F§F§F§5k §f>> ";
+    public static String pr = "§x§0§0§E§2§2§2H§x§0§0§E§5§3§7i§x§0§0§E§8§4§Cd§x§0§0§E§B§6§1e§x§0§0§E§E§7§6A§x§0§0§F§1§8§Cn§x§0§0§F§3§A§1d§x§0§0§F§6§B§6S§x§0§0§F§9§C§Be§x§0§0§F§C§E§0e§x§0§0§F§F§F§5k §f>> ";
+    public HideAndSeek plugin;
+    public HideAndSeekCommand(HideAndSeek plugin){
+        this.plugin = plugin;
+    }
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!sender.isOp()) {
@@ -94,12 +100,29 @@ public class HideAndSeekCommand implements CommandExecutor {
                         if(args.length >= 3) {
                             Player target = Bukkit.getPlayer(args[2]);
                             if (target != null) {
-                                ModelEngineAnimation.disguisePlayer(target, args[1]);
+                                AnimationHandler handler = ModelEngineAnimation.getHandler(target);
+                                if (handler != null){
+                                    ModelEngineAnimation.undisguisePlayer(target);
+                                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                        ModelEngineAnimation.disguisePlayer(target, args[1]);
+                                    }, 5L);
+                                }else{
+                                    ModelEngineAnimation.disguisePlayer(target, args[1]);
+                                }
                             } else {
                                 player.sendMessage(pr + "플레이어를 찾을 수 없습니다");
                             }
                         }else {
-                            ModelEngineAnimation.disguisePlayer(player, args[1]);
+                            AnimationHandler handler = ModelEngineAnimation.getHandler(player);
+                            if (handler != null){
+                                ModelEngineAnimation.undisguisePlayer(player);
+                                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                    ModelEngineAnimation.disguisePlayer(player, args[1]);
+                                }, 5L);
+                            }else{
+                                ModelEngineAnimation.disguisePlayer(player, args[1]);
+                            }
+
                         }
                     }else{
                         player.sendMessage(pr + "모델 ID를 알 수 없습니다");
@@ -179,11 +202,15 @@ public class HideAndSeekCommand implements CommandExecutor {
                     player.sendMessage(pr + "닉네임을 입력해주세요");
                 }
                 break;
-
+            case "random":
+            case "랜덤":
+                GuiInventory.openRandom(player);
+                break;
             default:
                 if (label.equalsIgnoreCase("has") || label.equalsIgnoreCase("hideandseek")){
                     player.sendMessage(pr + "/hideandseek reload");
                     player.sendMessage(pr + "/hideandseek info");
+                    player.sendMessage(pr + "/hideandseek random");
                     player.sendMessage(pr + "/hideandseek disguise (ModelId) (Player)");
                     player.sendMessage(pr + "/hideandseek undisguise (Player)");
                     player.sendMessage(pr + "/hideandseek play (Player) (AnimationName)");
@@ -192,6 +219,7 @@ public class HideAndSeekCommand implements CommandExecutor {
                 }else{
                     player.sendMessage(pr + "/숨바꼭질 리로드");
                     player.sendMessage(pr + "/숨바꼭질 정보");
+                    player.sendMessage(pr + "/숨바꼭질 랜덤");
                     player.sendMessage(pr + "/숨바꼭질 변신 (모델ID) (닉네임)");
                     player.sendMessage(pr + "/숨바꼭질 변신풀기 (닉네임)");
                     player.sendMessage(pr + "/숨바꼭질 실행 (닉네임) (애니메이션이름)");
@@ -202,4 +230,5 @@ public class HideAndSeekCommand implements CommandExecutor {
 
         return false;
     }
+
 }

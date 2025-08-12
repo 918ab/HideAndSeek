@@ -11,7 +11,8 @@
 
 - 플레이어별 모델 애니메이션 실행 및 중지 제어  
 - 아이템(IRON_NUGGET) 클릭 시 애니메이션 실행 또는 중지  
-- 애니메이션 타입에 따른 동작 방식 (auto / switch)  
+- 애니메이션 타입에 따른 동작 방식 (auto / switch)
+- 랜덤으로 모델을 소환 할수 있는 기능
 - 간단한 커맨드
 
 ---
@@ -24,10 +25,11 @@
 |-------------------------------------|------------------------------------|
 | `/hideandseek reload`                | 플러그인 설정 및 리소스 다시 불러오기         |
 | `/hideandseek info`                  | 플러그인 정보 및 상태 확인                   |
+| `/hideandseek random`                  | 모델 랜덤소환 기능                   |
 | `/hideandseek disguise (ModelId) (Player)`    | 특정 플레이어에게 지정한 모델로 변신시키기       |
 | `/hideandseek undisguise (Player)`               | 특정 플레이어의 변신 해제                      |
-| `/hideandseek play (Player) (AnimationName)`  | 모델별 설정 값 변경 (예: 애니메이션 타입, 크기 등) |
-| `/hideandseek stop (Player) (AnimationName)`  | 모델별 설정 값 변경 (예: 애니메이션 타입, 크기 등) |
+| `/hideandseek play (Player) (AnimationName)`  | 애니메이션 Play |
+| `/hideandseek stop (Player) (AnimationName)`  | 애니메이션 Stop |
 | `/hideandseek setting (ModelId) (Key) (Value)`  | 모델별 설정 값 변경 (예: 애니메이션 타입, 크기 등) |
 
 

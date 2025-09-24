@@ -25,6 +25,9 @@ unDisguise
 
 Skript
 - set player's model to (ModelId) 추가 예정
+- play auto animation of player to "애니메이션이름"
+- play switch animation of player to "애니메이션이름"
+- stop animation of player to "애니메이션이름"
 ```
 
 </details>

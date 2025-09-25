@@ -48,7 +48,7 @@ public class HideAndSeekCommandTab implements TabCompleter {
 
             }
             if (args.length == 2) {
-                if(args[0].equals("설정") || args[0].equals("setting") || args[0].equals("변신") || args[0].equals("disguise")) {
+                if(args[0].equals("설정") || args[0].equals("setting") || args[0].equals("변신") || args[0].equals("disguise") || args[0].equals("info") || args[0].equals("정보")) {
                     List<String> list = f.getNames("HideAndSeek");
                     candidates.addAll(list);
                 }
@@ -76,7 +76,7 @@ public class HideAndSeekCommandTab implements TabCompleter {
                         completions.add("변신중아님");
                         return completions;
                     }else{
-                        String model = HideAndSeekStorage.get("[Player]"+target.getName()+",Model").toString();
+                        String model = ModelEngineAnimation.getCurrentModelName(target);
                         List<String> list = f.getNames("HideAndSeek."+model+".Animation");
                         candidates.addAll(list);
                     }

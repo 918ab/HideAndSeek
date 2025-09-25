@@ -1,8 +1,14 @@
 package main.hideandseek.Event;
 
+import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
+import com.ticxo.modelengine.api.model.ActiveModel;
+import com.ticxo.modelengine.api.model.ModeledEntity;
+import com.ticxo.modelengine.api.model.bone.ModelBone;
 import main.hideandseek.Command.HideAndSeekCommand;
 import main.hideandseek.HideAndSeek;
+import main.hideandseek.Static.AnimationController;
+import main.hideandseek.Static.GuiInventory;
 import main.hideandseek.Static.HideAndSeekStorage;
 import main.hideandseek.Static.ModelEngineAnimation;
 import org.bukkit.Bukkit;
@@ -14,6 +20,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -22,6 +29,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
+
 
 import java.util.*;
 
@@ -75,7 +83,6 @@ public class HideAndSeekEvent implements Listener {
             }else{
                 return;
             }
-
             if (HideAndSeekStorage.get("[Player]"+player.getName()+",Animation") != null
                     && (Boolean) HideAndSeekStorage.get("[Player]"+player.getName()+",Animation") == true) {
                 if(item.getItemMeta().getCustomModelData() == 4){
@@ -94,19 +101,12 @@ public class HideAndSeekEvent implements Listener {
         if (handler != null) {
             event.setCancelled(true);
             if (event.getPlayer().isSneaking()) {
-                boolean invisible = HideAndSeekStorage.get("[Player]" + event.getPlayer().getName() + ",Invisible") != null
-                        && (Boolean) HideAndSeekStorage.get("[Player]" + event.getPlayer().getName() + ",Invisible");
-                if (invisible) {
-                    HideAndSeekStorage.remove("[Player]" + event.getPlayer().getName() + ",Invisible");
-                } else {
-                    HideAndSeekStorage.put("[Player]" + event.getPlayer().getName() + ",Invisible", true);
-                }
-                updateActionBar(event.getPlayer());
+                GuiInventory.openSetting(event.getPlayer());
             }
         }
 
     }
-    private void updateActionBar(Player player) {
+    public void updateActionBar(Player player) {
         boolean invisible = HideAndSeekStorage.get("[Player]" + player.getName() + ",Invisible") != null
                 && (Boolean) HideAndSeekStorage.get("[Player]" + player.getName() + ",Invisible");
         boolean animating = HideAndSeekStorage.get("[Player]" + player.getName() + ",Animation") != null
@@ -177,42 +177,109 @@ public class HideAndSeekEvent implements Listener {
         }
     }
     @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getView().getTitle().equals(HideAndSeekCommand.pr + "Random")) {
-            event.setCancelled(true);
-            if(event.getSlot() == 49){
-                Player player = (Player) event.getWhoClicked();
-                player.getInventory().addItem(event.getCurrentItem());
-                player.getInventory().close();
-                return;
-            }
-            Inventory inv = event.getInventory();
-            ItemStack clickedItem = event.getCurrentItem();
-            if (clickedItem == null || !clickedItem.hasItemMeta()) return;
+    public void onInventoryClick2(InventoryClickEvent event) {
+        if (!event.getView().getTitle().equals(HideAndSeekCommand.pr+"Setting")) {
+            return;
+        }
+        if (event.getSlotType() == InventoryType.SlotType.OUTSIDE) {
+            return;
+        }
+        event.setCancelled(true);
+        Player player = (Player) event.getWhoClicked();
+        int clickedSlot = event.getSlot();
+        if (clickedSlot == 11 || clickedSlot == 13 || clickedSlot == 15) {
+            GuiInventory.toggleSetting(player.getUniqueId(), clickedSlot);
 
-            Material clickedType = clickedItem.getType();
-            ItemStack ironIngot = inv.getItem(49);
-            if (ironIngot == null || !ironIngot.hasItemMeta()) return;
-
-            ItemMeta ironMeta = ironIngot.getItemMeta();
-            List<String> lore = ironMeta.hasLore() ? new ArrayList<>(ironMeta.getLore()) : new ArrayList<>();
-
-            if (clickedType == Material.RED_CONCRETE || clickedType == Material.GREEN_CONCRETE) {
-                String clickedName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
-                if (lore.contains("§f"+clickedName)) {
-                    lore.remove("§f"+clickedName);
-                    clickedItem.setType(Material.RED_CONCRETE);
+            boolean isEnabled = GuiInventory.getSetting(player.getUniqueId(), clickedSlot);
+            if (clickedSlot == 11) {
+                if (isEnabled) {
+                    HideAndSeekStorage.put("[Player]" +player.getName() + ",Invisible", true);
                 } else {
-                    lore.add("§f"+clickedName);
-                    clickedItem.setType(Material.GREEN_CONCRETE);
+                    HideAndSeekStorage.remove("[Player]" + player.getName() + ",Invisible");
                 }
-                ironMeta.setLore(lore);
-                ironIngot.setItemMeta(ironMeta);
-                inv.setItem(49, ironIngot);
-                inv.setItem(event.getSlot(), clickedItem);
+                updateActionBar(player);
             }
+
+            if (clickedSlot == 13) {
+                if (isEnabled) {
+                    AnimationController.disableAutomaticAnimations(player);
+                    player.sendMessage(HideAndSeekCommand.pr+"애니메이션을 중지합니다");
+                } else {
+                    AnimationController.enableAutomaticAnimations(player);
+                    player.sendMessage(HideAndSeekCommand.pr+"애니메이션을 시작합니다");
+                }
+            }
+
+//            if (clickedSlot == 15) {
+//                if (isEnabled) {
+//                    player.sendMessage("15번 슬롯 킴");
+//                } else {
+//                    player.sendMessage("15번 슬롯 끔");
+//                }
+//            }
+
+            GuiInventory.openSetting(player);
         }
     }
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player)) return;
+        Player player = (Player) event.getWhoClicked();
+
+        String title = event.getView().getTitle();
+        if (!title.startsWith(HideAndSeekCommand.pr + "Random")) return;
+
+        event.setCancelled(true);
+
+        int page = 0;
+        try {
+            page = Integer.parseInt(title.replace(HideAndSeekCommand.pr + "Random", "")
+                    .replace("[", "").replace("]", "").trim());
+        } catch (Exception ignored) {}
+
+        ItemStack clickedItem = event.getCurrentItem();
+        if (clickedItem == null || !clickedItem.hasItemMeta()) return;
+
+        Inventory inv = event.getInventory();
+        ItemStack ironIngot = inv.getItem(49);
+
+        if (event.getSlot() == 45 && clickedItem.getType() == Material.ARROW) {
+            GuiInventory.openRandom(player, page - 1, ironIngot);
+            return;
+        }
+        if (event.getSlot() == 53 && clickedItem.getType() == Material.ARROW) {
+            GuiInventory.openRandom(player, page + 1, ironIngot);
+            return;
+        }
+
+        if (event.getSlot() == 49 && clickedItem.getType() == Material.IRON_INGOT) {
+            player.getInventory().addItem(clickedItem);
+            player.closeInventory();
+            return;
+        }
+
+        Material clickedType = clickedItem.getType();
+        if (ironIngot == null) return;
+
+        if (clickedType == Material.RED_CONCRETE || clickedType == Material.GREEN_CONCRETE) {
+            ItemMeta ironMeta = ironIngot.getItemMeta();
+            List<String> lore = ironMeta.hasLore() ? new ArrayList<>(ironMeta.getLore()) : new ArrayList<>();
+            String clickedName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
+
+            if (lore.contains("§f" + clickedName)) {
+                lore.remove("§f" + clickedName);
+                clickedItem.setType(Material.RED_CONCRETE);
+            } else {
+                lore.add("§f" + clickedName);
+                clickedItem.setType(Material.GREEN_CONCRETE);
+            }
+            ironMeta.setLore(lore);
+            ironIngot.setItemMeta(ironMeta);
+            inv.setItem(49, ironIngot);
+            inv.setItem(event.getSlot(), clickedItem);
+        }
+    }
+
     @EventHandler
     public void onInventoryClickEvent(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) return;
@@ -228,7 +295,6 @@ public class HideAndSeekEvent implements Listener {
             }else{
                 return;
             }
-
             if (HideAndSeekStorage.get("[Player]"+player.getName()+",Animation") != null
                     && (Boolean) HideAndSeekStorage.get("[Player]"+player.getName()+",Animation") == true) {
                 if(item.getItemMeta().getCustomModelData() == 4){
@@ -261,8 +327,8 @@ public class HideAndSeekEvent implements Listener {
         if(itemMeta.getCustomModelData() == 2){
             //auto
             HideAndSeekStorage.put("[Player]"+player.getName()+",Animation",true);
-            ModelEngineAnimation.Stuck(player);
-            handler.playAnimation(animation, 0.3, 0.3, 1, false);
+            AnimationController.disableAutomaticAnimations(player);
+            handler.playAnimation(animation, 0.3, 0.3, 1, true);
             String modelID = ModelEngineAnimation.getCurrentModelName(player);
             double count = Math.round((double) HideAndSeekStorage.get("[Animation]"+modelID+","+animation));
             long time = (long) count * 20;
@@ -285,16 +351,18 @@ public class HideAndSeekEvent implements Listener {
                         meta.setCustomModelData(1);
                         currentItem.setItemMeta(meta);
                     }
-
-                    ModelEngineAnimation.unStuck(player);
+                    boolean isEnabled = GuiInventory.getSetting(player.getUniqueId(), 13);
+                    if(!isEnabled){
+                        AnimationController.enableAutomaticAnimations(player);
+                    }
                     handler.stopAnimation(animation);
-                    handler.playAnimation("idle", 0.3, 0.3, 1, false);
                     HideAndSeekStorage.remove("[Player]"+player.getName()+",Animation");
                 }
             }.runTaskLater(Bukkit.getPluginManager().getPlugin("HideAndseek"), time);
         }if(itemMeta.getCustomModelData() == 4){
             //switch on
-            handler.playAnimation(animation, 0.3, 0.3, 1, false);
+            AnimationController.disableAutomaticAnimations(player);
+            handler.playAnimation(animation, 0.3, 0.3, 1, true);
             HideAndSeekStorage.put("[Player]"+player.getName()+",Animation", true);
             BukkitRunnable runnable = new BukkitRunnable() {
                 @Override
@@ -310,9 +378,11 @@ public class HideAndSeekEvent implements Listener {
             HideAndSeekStorage.put("[Player]"+player.getName()+",ActionbarRunnable", runnable);
         }if(itemMeta.getCustomModelData() == 3){
             //switch off
-            ModelEngineAnimation.unStuck(player);
+            boolean isEnabled = GuiInventory.getSetting(player.getUniqueId(), 13);
+            if(!isEnabled){
+                AnimationController.enableAutomaticAnimations(player);
+            }
             handler.stopAnimation(animation);
-            handler.playAnimation("idle", 0.3, 0.3, 1, false);
             HideAndSeekStorage.remove("[Player]"+player.getName()+",Animation");
 
             Object runnableObj = HideAndSeekStorage.get("[Player]"+player.getName()+",ActionbarRunnable");
@@ -327,8 +397,10 @@ public class HideAndSeekEvent implements Listener {
     @EventHandler
     public void onPlayerJoinEvent(PlayerJoinEvent event){
         invisibleState.remove(event.getPlayer().getName());
-        HideAndSeekStorage.remove("[Player]"+event.getPlayer()+",Animation");
-        HideAndSeekStorage.remove("[Player]" + event.getPlayer().getName() + ",Invisible");
+        HideAndSeekStorage.remove("[Player]"+event.getPlayer().getName()+",Animation");
+        HideAndSeekStorage.remove("[Player]"+event.getPlayer().getName() + ",Invisible");
+        HideAndSeekStorage.remove("[Player]"+event.getPlayer().getName()+",ActionbarRunnable");
         ModelEngineAnimation.undisguisePlayer(event.getPlayer());
+        GuiInventory.resetSettings(event.getPlayer().getUniqueId());
     }
 }

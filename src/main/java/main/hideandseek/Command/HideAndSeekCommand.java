@@ -1,20 +1,18 @@
 package main.hideandseek.Command;
 
+import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
+import com.ticxo.modelengine.api.model.ActiveModel;
+import com.ticxo.modelengine.api.model.ModeledEntity;
 import main.hideandseek.HideAndSeek;
-import main.hideandseek.Static.DataManager;
-import main.hideandseek.Static.GuiInventory;
-import main.hideandseek.Static.HideAndSeekStorage;
-import main.hideandseek.Static.ModelEngineAnimation;
+import main.hideandseek.Static.*;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class HideAndSeekCommand implements CommandExecutor {
     public static String pr = "§x§0§0§E§2§2§2H§x§0§0§E§5§3§7i§x§0§0§E§8§4§Cd§x§0§0§E§B§6§1e§x§0§0§E§E§7§6A§x§0§0§F§1§8§Cn§x§0§0§F§3§A§1d§x§0§0§F§6§B§6S§x§0§0§F§9§C§Be§x§0§0§F§C§E§0e§x§0§0§F§F§F§5k §f>> ";
@@ -40,13 +38,20 @@ public class HideAndSeekCommand implements CommandExecutor {
                 if(args.length >= 2){
                     HideAndSeekStorage.print(player,args[1]);
                     return true;
+                }else{
+                    player.sendMessage(pr+"모델 이름을 입력해주세요");
                 }
-                HideAndSeekStorage.printAll(player);
+                break;
+            case "i":
+                if(args.length >= 2){
+                    HideAndSeekStorage.printInfo(player,args[1]);
+                    return true;
+                }
                 break;
             case "리로드":
             case "reload":
-                ModelEngineAnimation.ModelReload();
-                player.sendMessage(pr+"리로드 완료");
+                player.sendMessage(pr+"리로드 중");
+                ModelEngineAnimation.ModelReload(player);
                 break;
             case "설정":
             case "setting":
@@ -56,29 +61,65 @@ public class HideAndSeekCommand implements CommandExecutor {
                     if(list.contains(args[1])){
                         List<String> keyList = new ArrayList<>(Arrays.asList("PlayerScale", "PlayerHealth","ModelScale", "HitboxScale","Name"));
                         List<String> Animations = f.getNames("HideAndSeek."+args[1]+".Animation");
-                        for(String Animation : Animations){
-                            keyList.add("Animation."+Animation);
+                        if (Animations != null) {
+                            for(String Animation : Animations){
+                                keyList.add("Animation."+Animation);
+                            }
                         }
                         if(keyList.contains(args[2])){
                             String modelId = args[1];
                             String key = args[2];
-                            if(args[2].equals("Name")) {
+                            if(key.equalsIgnoreCase("Name")) {
                                 if(args.length >= 4){
-                                    String value = args[3];
-                                    player.sendMessage(pr+modelId+" / "+key+" / "+value +" §a설정완료");
-                                    f.set("HideAndSeek."+modelId+"."+key,value);
-                                    ModelEngineAnimation.ModelReload();
+                                    String value = String.join(" ", Arrays.copyOfRange(args, 3, args.length));
+                                    String before = HideAndSeekStorage.get(modelId + "," + key).toString();
+                                    f.set("HideAndSeek." + modelId + "." + key, value);
+                                    f.saveConfig();
+                                    HideAndSeekStorage.put(modelId + "," + key, value);
+                                    player.sendMessage(pr + modelId + " " + key + " §c" + before +" §f-> §a"+value);
+                                    for (Player p : Bukkit.getOnlinePlayers()){
+                                        AnimationHandler handler = ModelEngineAnimation.getHandler(p);
+                                        if (handler != null) {
+                                            String model = HideAndSeekStorage.get("[Player]"+p.getName()+",Model").toString();
+                                            if(model.equals(modelId)){
+                                                ModelEngineAnimation.undisguisePlayer(p);
+                                                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                                    p.sendMessage(pr+"값이 변경되었습니다");
+                                                    ModelEngineAnimation.disguisePlayer(p, modelId);
+                                                }, 5L);
+                                            }
+                                        }
+                                    }
                                 }else {
                                     player.sendMessage(pr + "이름을 입력해주세요");
                                 }
                             }else{
-                                try {
-                                    double value = Double.parseDouble(args[3]);
-                                    player.sendMessage(pr+modelId+" / "+key+" / "+value +" §a설정완료");
-                                    f.set("HideAndSeek."+modelId+"."+key,value);
-                                    ModelEngineAnimation.ModelReload();
-                                } catch (NumberFormatException e) {
-                                    player.sendMessage(pr+"숫자만 입력해주세요");
+                                if (args.length >= 4) {
+                                    try {
+                                        double value = Double.parseDouble(args[3]);
+                                        String before = HideAndSeekStorage.get(modelId + "," + key).toString();
+                                        f.set("HideAndSeek." + modelId + "." + key, value);
+                                        f.saveConfig();
+                                        HideAndSeekStorage.put(modelId + "," + key, value);
+                                        player.sendMessage(pr + modelId + " " + key + " §c" + before +" §f-> §a"+value);
+                                        for (Player p : Bukkit.getOnlinePlayers()){
+                                            AnimationHandler handler = ModelEngineAnimation.getHandler(p);
+                                            if (handler != null) {
+                                                String model = HideAndSeekStorage.get("[Player]"+p.getName()+",Model").toString();
+                                                if(model.equals(modelId)){
+                                                    ModelEngineAnimation.undisguisePlayer(p);
+                                                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                                        p.sendMessage(pr+"값이 변경되었습니다");
+                                                        ModelEngineAnimation.disguisePlayer(p, modelId);
+                                                    }, 5L);
+                                                }
+                                            }
+                                        }
+                                    } catch (NumberFormatException e) {
+                                        player.sendMessage(pr+"숫자만 입력해주세요");
+                                    }
+                                } else {
+                                    player.sendMessage(pr + "값을 입력해주세요");
                                 }
                             }
                         }else{
@@ -158,7 +199,7 @@ public class HideAndSeekCommand implements CommandExecutor {
                                 String model = ModelEngineAnimation.getCurrentModelName(target);
                                 List<String> Animation = fa.getNames("HideAndSeek." + model + ".Animation");
                                 if (Animation.contains(args[2])) {
-                                    handler.playAnimation(args[2], 0.3, 0.3, 1, false);
+                                    handler.playAnimation(args[2], 0.3, 0.3, 1, true);
                                 } else {
                                     player.sendMessage(pr + "애니메이션 찾을 수 없음");
                                 }
@@ -204,7 +245,34 @@ public class HideAndSeekCommand implements CommandExecutor {
                 break;
             case "random":
             case "랜덤":
-                GuiInventory.openRandom(player);
+                GuiInventory.openRandom(player,0,null);
+                break;
+
+            case "3":
+                ModelEngineAPI api = ModelEngineAPI.getAPI();
+                if (api == null) {
+                    player.sendMessage("§cModelEngineAPI를 찾을 수 없습니다.");
+                    return true;
+                }
+
+                ModeledEntity entity = api.getModelUpdaters().getModeledEntity(player.getUniqueId());
+                if (entity == null) {
+                    player.sendMessage("§c변신한 모델이 없습니다.");
+                    return true;
+                }
+
+                ActiveModel activeModel = entity.getModels().values().stream().findFirst().orElse(null);
+                if (activeModel == null) {
+                    player.sendMessage("§c변신한 모델이 없습니다.");
+                    return true;
+                }
+
+                // 모델의 모든 뼈대 이름(ID)을 가져옵니다.
+                Set<String> boneNames = activeModel.getBones().keySet();
+
+                player.sendMessage("§e[현재 모델의 뼈대 목록]");
+                player.sendMessage("§f" + String.join(", ", boneNames));
+                player.sendMessage("§7이 중에서 몸통 전체를 담당하는 뼈대 이름을 찾으세요.");
                 break;
             default:
                 if (label.equalsIgnoreCase("has") || label.equalsIgnoreCase("hideandseek")){

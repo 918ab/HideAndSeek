@@ -18,39 +18,40 @@ public class HideAndSeekStorage {
         Storage.remove(key);
     }
 
-    public static void printAll(Player player) {
-        if (Storage.isEmpty()){
-            player.sendMessage(pr+"아직 초기화되지 않음");
-            return;
-        };
-        Map<String, List<String>> grouped = new HashMap<>();
-        for (String key : Storage.keySet()) {
-            if (!key.startsWith("[Animation]")) continue;
-            String pureKey = key.substring("[Animation]".length());
-            String[] split = pureKey.split(",", 2);
-            if (split.length < 2) continue;
-            String modelId = split[0];
-            String animation = split[1];
-            grouped.computeIfAbsent(modelId, k -> new ArrayList<>()).add(animation);
-        }
+
+    public static void print(Player player, String modelId) {
         DataManager f = new DataManager(Bukkit.getPluginManager().getPlugin("HideAndseek"), "Data.yml");
-        for (String modelId : grouped.keySet()) {
-            List<String> animations = grouped.get(modelId);
-            player.sendMessage(pr+ "[§a"+modelId+"§f] 애니메이션 "+animations.size()+"개");
-            player.sendMessage(pr+
-                    "Name: §e"+f.get("HideAndSeek."+modelId+".Name")
-                    +"§f, PHealth: §e"+f.get("HideAndSeek."+modelId+".PlayerHealth")
-                    +"§f, PScale: §e"+f.get("HideAndSeek."+modelId+".PlayerScale")
-                    +"§f, MScale: §e"+f.get("HideAndSeek."+modelId+".ModelScale")
-                    +"§f, HScale: §e"+f.get("HideAndSeek."+modelId+".HitboxScale"));
+        List<String> list = f.getNames("HideAndSeek");
+        if(list.contains(modelId)){
+            player.sendMessage(pr+"Name : §a"+f.get("HideAndSeek."+modelId+"Name"));
+            player.sendMessage(pr+"PlayerScale : §a"+f.get("HideAndSeek."+modelId+".PlayerScale"));
+            player.sendMessage(pr+"ModelScale : §a"+f.get("HideAndSeek."+modelId+".ModelScale"));
+            player.sendMessage(pr+"HitboxScale : §a"+f.get("HideAndSeek."+modelId+".HitboxScale"));
+            player.sendMessage(pr+"PlayerHealth : §a"+f.get("HideAndSeek."+modelId+".PlayerHealth"));
+            List<String> animations = f.getNames("HideAndSeek."+modelId+".Animation");
+            if(animations !=null){
+                for (String animation : animations) {
+                    String mode = f.get("HideAndSeek." + modelId + ".Animation." + animation).toString();
+                    String durationKey = "[Animation]" + modelId + "," + animation;
+                    Object durationObj = HideAndSeekStorage.get(durationKey);
+                    if (durationObj != null) {
+                        player.sendMessage(pr + "§f" + animation + " : §a" + mode + " §7(" + durationObj + "초)");
+                    } else {
+                        player.sendMessage(pr + "§f" + animation + " : §a" + mode);
+                    }
+                }
+            }
         }
     }
-    public static void print(Player player,String name) {
+    public static void printInfo(Player player,String name) {
         for (String key : Storage.keySet()) {
             if (!key.contains(name)) continue;
             player.sendMessage(pr+"Key : "+key +", Value : "+ Storage.get(key));
         }
+
     }
+
+
     public static List<String> getList(String name) {
         List<String> list = new ArrayList<>();
         for (String key : Storage.keySet()) {

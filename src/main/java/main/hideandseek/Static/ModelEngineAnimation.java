@@ -24,11 +24,16 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 public class ModelEngineAnimation {
 
     private static final String pr = "§x§0§0§E§2§2§2H§x§0§0§E§5§3§7i§x§0§0§E§8§4§Cd§x§0§0§E§B§6§1e§x§0§0§E§E§7§6A§x§0§0§F§1§8§Cn§x§0§0§F§3§A§1d§x§0§0§F§6§B§6S§x§0§0§F§9§C§Be§x§0§0§F§C§E§0e§x§0§0§F§F§F§5k §f>> ";
@@ -43,24 +48,6 @@ public class ModelEngineAnimation {
             return null;
         }
         return entity;
-    }
-    public static ActiveModel getActiveModel(Player player) {
-        ModelEngineAPI api = ModelEngineAPI.getAPI();
-        if (api == null) {
-            Bukkit.broadcastMessage(pr + "ModelEngineAPI 연결 실패");
-            return null;
-        }
-
-        ModeledEntity entity = api.getModelUpdaters().getModeledEntity(player.getUniqueId());
-        if (entity == null) {
-            return null;
-        }
-
-        ActiveModel model = entity.getModels().values().stream().findFirst().orElse(null);
-        if (model == null) {
-            return null;
-        }
-        return model;
     }
     public static AnimationHandler getHandler(Player player) {
         ModelEngineAPI api = ModelEngineAPI.getAPI();
@@ -84,35 +71,16 @@ public class ModelEngineAnimation {
     public static String getCurrentModelName(Player player) {
         ModelEngineAPI api = ModelEngineAPI.getAPI();
         if (api == null) {
-            Bukkit.broadcastMessage(pr + "ModelEngineAPI 연결 실패");
             return null;
         }
 
         ModeledEntity entity = api.getModelUpdaters().getModeledEntity(player.getUniqueId());
         if (entity == null) {
-            player.sendMessage(pr + "적용된 모델 없음");
             return null;
         }
         return entity.getModels().keySet().stream().findFirst().orElse(null);
     }
-    public static void Stuck(Player player) {
-        AnimationHandler handler = getHandler(player);
-        if (handler == null) return;
-        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.IDLE, "zxcv", 0.2, 0.2, 1.0));
-        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.WALK, "zxcv", 0.2, 0.2, 1.0));
-        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.JUMP, "zxcv", 0.2, 0.2, 1.0));
 
-    }
-    public static void unStuck(Player player) {
-        AnimationHandler handler = getHandler(player);
-        if (handler == null) return;
-        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.IDLE, "idle", 0.2, 0.2, 1.0));
-        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.WALK, "walk", 0.2, 0.2, 1.0));
-        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(ModelState.JUMP, "jump", 0.2, 0.2, 1.0));
-        handler.stopAnimation("idle");
-        handler.stopAnimation("walk");
-        handler.stopAnimation("jump");
-    }
 
 
     public static void undisguisePlayer(Player player){
@@ -123,7 +91,6 @@ public class ModelEngineAnimation {
         player.setFoodLevel(20);
         player.setSaturation(20.0f);
         if(modeledEntity != null) {
-            player.getInventory().clear();
             player.getAttribute(Attribute.GENERIC_SCALE).setBaseValue(1);
             modeledEntity.markRemoved();
             ModelEngineAPI.getEntityHandler().setForcedInvisible(player, false);
@@ -132,8 +99,10 @@ public class ModelEngineAnimation {
             if (runnableObj instanceof BukkitRunnable) {
                 ((BukkitRunnable) runnableObj).cancel();
             }
+            HideAndSeekStorage.remove("[Player]"+player.getName()+",Animation");
+            HideAndSeekStorage.remove("[Player]" + player.getName() + ",Invisible");
             HideAndSeekStorage.remove("[Player]"+player.getName()+",ActionbarRunnable");
-            HideAndSeekStorage.remove("[Player]"+player+",Animation");
+            GuiInventory.resetSettings(player.getUniqueId());
         }
     }
     public static void disguisePlayer(Player player, String modelId) {
@@ -215,68 +184,86 @@ public class ModelEngineAnimation {
             bukkitData.getTracked().addForcedPairing(player.getUniqueId());
         }
     }
-    public static void ModelReload() {
-        DataManager dataManager = new DataManager(Bukkit.getPluginManager().getPlugin("HideAndseek"), "Data.yml");
-        File blueprintDir = new File("plugins/ModelEngine/blueprints/");
+    public static void ModelReload(@Nullable Player player) {
+        Plugin plugin = Bukkit.getPluginManager().getPlugin("HideAndseek");
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                long startTime = System.currentTimeMillis();
 
-        if (!blueprintDir.exists() || !blueprintDir.isDirectory()) {
-            Bukkit.broadcastMessage("§c디렉토리가 존재하지 않거나 잘못되었습니다");
-            return;
-        }
+                Map<String, Object> tempStorage = new HashMap<>();
+                DataManager dataManager = new DataManager(plugin, "Data.yml");
 
-        File[] files = blueprintDir.listFiles();
-        if (files == null || files.length == 0) {
-            Bukkit.broadcastMessage("§c디렉토리에 파일이 없습니다");
-            return;
-        }
-        String entityName = dataManager.get("Random").toString();
-        try {
-            EntityType entityType = EntityType.valueOf(entityName);
-            HideAndSeekStorage.put("Random",entityType);
-        } catch (IllegalArgumentException e) {
-            Bukkit.broadcastMessage("§c잘못된 이름 : "+entityName);
-        }
-        for (File file : files) {
-            if (!file.getName().endsWith(".bbmodel")) continue;
+                File blueprintDir = new File("plugins/ModelEngine/blueprints/");
+                if (!blueprintDir.exists() || !blueprintDir.isDirectory()) {
+                    return;
+                }
 
-            String modelId = file.getName().replace(".bbmodel", "");
-            String modelPath = "HideAndSeek." + modelId;
+                File[] files = blueprintDir.listFiles();
+                if (files == null || files.length == 0) {
+                    return;
+                }
 
-            if (dataManager.get(modelPath) == null) {
-                Bukkit.getLogger().info("[HideAndSeek] " + modelId + " 자동생성");
-                dataManager.set(modelPath + ".Name", "설정되지않음");
-                dataManager.set(modelPath + ".PlayerScale", 1);
-                dataManager.set(modelPath + ".ModelScale", 1);
-                dataManager.set(modelPath + ".HitboxScale", 1);
-                dataManager.set(modelPath + ".PlayerHealth", 20);
+                Object randomEntity = dataManager.get("Random");
+                if (randomEntity != null) {
+                    try {
+                        EntityType entityType = EntityType.valueOf(randomEntity.toString());
+                        tempStorage.put("Random", entityType);
+                    } catch (IllegalArgumentException e) {
+                        runSyncTask(() -> Bukkit.broadcastMessage("§cData.yml의 Random 엔티티 이름이 잘못되었습니다: " + randomEntity));
+                    }
+                }
+
+                for (File file : files) {
+                    if (!file.getName().endsWith(".bbmodel")) continue;
+
+                    String modelId = file.getName().replace(".bbmodel", "");
+                    String modelPath = "HideAndSeek." + modelId;
+
+                    if (dataManager.get(modelPath) == null) {
+                        Bukkit.getLogger().info("[HideAndSeek] " + modelId + " 자동생성");
+                        dataManager.set(modelPath + ".Name", "설정되지않음");
+                        dataManager.set(modelPath + ".PlayerScale", 1);
+                        dataManager.set(modelPath + ".ModelScale", 1);
+                        dataManager.set(modelPath + ".HitboxScale", 1);
+                        dataManager.set(modelPath + ".PlayerHealth", 20);
+                    }
+
+                    tempStorage.put(modelId + ",Name", dataManager.get(modelPath + ".Name"));
+                    tempStorage.put(modelId + ",ModelScale", dataManager.get(modelPath + ".ModelScale"));
+                    tempStorage.put(modelId + ",PlayerScale", dataManager.get(modelPath + ".PlayerScale"));
+                    tempStorage.put(modelId + ",HitboxScale", dataManager.get(modelPath + ".HitboxScale"));
+                    tempStorage.put(modelId + ",PlayerHealth", dataManager.get(modelPath + ".PlayerHealth"));
+
+                    parseAndApplyAnimations(modelId, dataManager, tempStorage);
+                }
+
+                dataManager.saveConfig();
+                long duration = System.currentTimeMillis() - startTime;
+                runSyncTask(() -> {
+                    HideAndSeekStorage.Storage.clear();
+                    HideAndSeekStorage.Storage.putAll(tempStorage);
+
+                    String pr = "§x§0§0§E§2§2§2H§x§0§0§E§5§3§7i§x§0§0§E§8§4§Cd§x§0§0§E§B§6§1e§x§0§0§E§E§7§6A§x§0§0§F§1§8§Cn§x§0§0§F§3§A§1d§x§0§0§F§6§B§6S§x§0§0§F§9§C§Be§x§0§0§F§C§E§0e§x§0§0§F§F§F§5k §f>> ";
+                    if(player != null) {
+                        player.sendMessage(pr + "리로드 완료 (§e" + String.format("%.3f", duration / 1000.0) + "s§f)");
+                    }
+                });
+
             }
-
-            HideAndSeekStorage.put(modelId + ",Name", dataManager.get(modelPath + ".Name"));
-            HideAndSeekStorage.put(modelId + ",ModelScale", dataManager.get(modelPath + ".ModelScale"));
-            HideAndSeekStorage.put(modelId + ",PlayerScale", dataManager.get(modelPath + ".PlayerScale"));
-            HideAndSeekStorage.put(modelId + ",HitboxScale", dataManager.get(modelPath + ".HitboxScale"));
-            HideAndSeekStorage.put(modelId + ",PlayerHealth", dataManager.get(modelPath + ".PlayerHealth"));
-
-
-            parseAndApplyAnimations(modelId, dataManager);
-        }
+        }.runTaskAsynchronously(plugin);
     }
 
-    private static void parseAndApplyAnimations(String modelId, DataManager dataManager) {
+    private static void parseAndApplyAnimations(String modelId, DataManager dataManager, Map<String, Object> tempStorage) {
         File modelFile = new File("plugins/ModelEngine/blueprints/" + modelId + ".bbmodel");
         try (FileReader reader = new FileReader(modelFile)) {
             JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
             JsonElement animationsElement = json.get("animations");
 
-            if (animationsElement == null || !animationsElement.isJsonArray()) {
-                Bukkit.broadcastMessage("§canimations 존재하지 않음(" + modelId + ")");
-                return;
-            }
+            if (animationsElement == null || !animationsElement.isJsonArray()) return;
+
             JsonArray animations = animationsElement.getAsJsonArray();
-            if (animations.size() == 0) {
-                Bukkit.broadcastMessage("§c애니메이션 없음(" + modelId + ")");
-                return;
-            }
+            if (animations.size() == 0) return;
 
             for (JsonElement animationElement : animations) {
                 JsonObject animObj = animationElement.getAsJsonObject();
@@ -286,16 +273,20 @@ public class ModelEngineAnimation {
                 double length = animObj.get("length").getAsDouble();
                 String loopType = animObj.has("loop") ? animObj.get("loop").getAsString() : "";
 
-                HideAndSeekStorage.put("[Animation]" + modelId + "," + animation, length);
-
+                tempStorage.put("[Animation]" + modelId + "," + animation, length);
                 String mode = loopType.equals("hold") ? "switch" : "auto";
                 dataManager.set("HideAndSeek." + modelId + ".Animation." + animation, mode);
-
-                HideAndSeekStorage.put("[ModelEngine]" + modelId + "," + animation, mode);
+                tempStorage.put("[ModelEngine]" + modelId + "," + animation, mode);
             }
-
         } catch (Exception e) {
-            Bukkit.broadcastMessage("§c모델 로딩 오류(" + modelId + ") : " + e.getMessage());
+            runSyncTask(() -> Bukkit.broadcastMessage("§c모델 로딩 오류(" + modelId + ") : " + e.getMessage()));
+        }
+    }
+
+    private static void runSyncTask(Runnable task) {
+        Plugin plugin = Bukkit.getPluginManager().getPlugin("HideAndseek");
+        if (plugin != null) {
+            Bukkit.getScheduler().runTask(plugin, task);
         }
     }
     public static void spawnModeledEntity(Player player, String blueprintName, EntityType entityType) {
@@ -319,7 +310,9 @@ public class ModelEngineAnimation {
             modeledEntity.setBaseEntityVisible(false);
             ActiveModel activeModel = ModelEngineAPI.createActiveModel(blueprint);
             activeModel.setAutoRendererInitialization(false);
-            ModelOptionParser options = new ModelOptionParser();
+            String input = "scale "+HideAndSeekStorage.get(blueprintName+",ModelScale")+" hitboxScale "+HideAndSeekStorage.get(blueprintName+",HitboxScale");
+            String[] args = input.split(" ");
+            ModelOptionParser options = ModelOptionParser.parse(0, args);
             options.applyDisguiseOptions(activeModel);
             modeledEntity.addModel(activeModel, true).ifPresent(ActiveModel::destroy);
             activeModel.getBones().values().forEach((modelBone) -> {

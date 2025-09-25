@@ -6,7 +6,7 @@
 
   <groupId>Main</groupId>
   <artifactId>HideAndSeek</artifactId>
-  <version>1.21.v3</version>
+  <version>1.21.v4</version>
   <packaging>jar</packaging>
 
   <name>HideAndSeek</name>

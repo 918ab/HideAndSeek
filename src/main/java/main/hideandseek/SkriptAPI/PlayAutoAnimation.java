@@ -5,7 +5,8 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.util.Kleenean;
 import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
-import com.ticxo.modelengine.api.model.ActiveModel;
+import main.hideandseek.Static.AnimationController;
+import main.hideandseek.Static.GuiInventory;
 import main.hideandseek.Static.HideAndSeekStorage;
 import main.hideandseek.Static.ModelEngineAnimation;
 import org.bukkit.Bukkit;
@@ -13,7 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.scheduler.BukkitRunnable;
 
-public class PlayAnimation extends Effect {
+public class PlayAutoAnimation extends Effect {
 
     private Expression<Player> playerExpr;
     private Expression<String> animationExpr;
@@ -39,28 +40,30 @@ public class PlayAnimation extends Effect {
 
         AnimationHandler handler = ModelEngineAnimation.getHandler(player);
         if (handler == null) {
+            player.sendMessage("변신중아님");
             return;
         }
-
         HideAndSeekStorage.put("[Player]"+player.getName()+",Animation",true);
-        ModelEngineAnimation.Stuck(player);
-        handler.playAnimation(animation, 0.3, 0.3, 1, false);
+        AnimationController.disableAutomaticAnimations(player);
+        handler.playAnimation(animation, 0.3, 0.3, 1, true);
         String modelID = ModelEngineAnimation.getCurrentModelName(player);
         double count = Math.round((double) HideAndSeekStorage.get("[Animation]"+modelID+","+animation));
         long time = (long) count * 20;
-
         new BukkitRunnable() {
             @Override
             public void run() {
-                ModelEngineAnimation.unStuck(player);
+                boolean isEnabled = GuiInventory.getSetting(player.getUniqueId(), 13);
+                if(!isEnabled){
+                    AnimationController.enableAutomaticAnimations(player);
+                }
                 handler.stopAnimation(animation);
-                handler.playAnimation("idle", 0.3, 0.3, 1, false);
+                HideAndSeekStorage.remove("[Player]"+player.getName()+",Animation");
             }
         }.runTaskLater(Bukkit.getPluginManager().getPlugin("HideAndseek"), time);
     }
 
     @Override
     public String toString(Event e, boolean debug) {
-        return "play animation of " + playerExpr.toString(e, debug) + " to " + animationExpr.toString(e, debug);
+        return "play auto animation of " + playerExpr.toString(e, debug) + " to " + animationExpr.toString(e, debug);
     }
 }

@@ -3,8 +3,8 @@ package main.hideandseek.SkriptAPI;
 import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
-import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
+import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
 import main.hideandseek.Static.AnimationController;
 import main.hideandseek.Static.GuiInventory;
 import main.hideandseek.Static.HideAndSeekStorage;
@@ -13,11 +13,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.jetbrains.annotations.Nullable;
 
-import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
-
-public class StopAnimation extends Effect {
+public class DisguisePlayer extends Effect {
 
     private Expression<Player> playerExpr;
     private Expression<String> animationExpr;
@@ -43,26 +40,14 @@ public class StopAnimation extends Effect {
 
         AnimationHandler handler = ModelEngineAnimation.getHandler(player);
         if (handler != null) {
-            handler.stopAnimation(animation);
-
-            boolean isEnabled = GuiInventory.getSetting(player.getUniqueId(), 13);
-            if(!isEnabled){
-                AnimationController.enableAutomaticAnimations(player);
-            }
-            HideAndSeekStorage.remove("[Player]"+player.getName()+",Animation");
-            Object runnableObj = HideAndSeekStorage.get("[Player]"+player.getName()+",ActionbarRunnable");
-            if (runnableObj instanceof BukkitRunnable) {
-                ((BukkitRunnable) runnableObj).cancel();
-            }
-            player.sendActionBar(" ");
-            HideAndSeekStorage.remove("[Player]"+player.getName()+",ActionbarRunnable");
-        }else{
-            player.sendMessage("변신중아님");
+            player.sendMessage("변신중임");
+            return;
         }
+        ModelEngineAnimation.disguisePlayer(player, animation);
     }
 
     @Override
     public String toString(Event e, boolean debug) {
-        return "stop animation of " + playerExpr.toString(e, debug) + " to " + animationExpr.toString(e, debug);
+        return "set disguise model of " + playerExpr.toString(e, debug) + " to " + animationExpr.toString(e, debug);
     }
 }

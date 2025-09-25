@@ -3,8 +3,8 @@ package main.hideandseek.SkriptAPI;
 import ch.njol.skript.lang.Effect;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
-import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.util.Kleenean;
+import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
 import main.hideandseek.Static.AnimationController;
 import main.hideandseek.Static.GuiInventory;
 import main.hideandseek.Static.HideAndSeekStorage;
@@ -13,11 +13,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.jetbrains.annotations.Nullable;
 
-import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
-
-public class StopAnimation extends Effect {
+public class PlaySwitchAnimation extends Effect {
 
     private Expression<Player> playerExpr;
     private Expression<String> animationExpr;
@@ -42,27 +39,27 @@ public class StopAnimation extends Effect {
         if (animation == null) return;
 
         AnimationHandler handler = ModelEngineAnimation.getHandler(player);
-        if (handler != null) {
-            handler.stopAnimation(animation);
-
-            boolean isEnabled = GuiInventory.getSetting(player.getUniqueId(), 13);
-            if(!isEnabled){
-                AnimationController.enableAutomaticAnimations(player);
-            }
-            HideAndSeekStorage.remove("[Player]"+player.getName()+",Animation");
-            Object runnableObj = HideAndSeekStorage.get("[Player]"+player.getName()+",ActionbarRunnable");
-            if (runnableObj instanceof BukkitRunnable) {
-                ((BukkitRunnable) runnableObj).cancel();
-            }
-            player.sendActionBar(" ");
-            HideAndSeekStorage.remove("[Player]"+player.getName()+",ActionbarRunnable");
-        }else{
+        if (handler == null) {
             player.sendMessage("변신중아님");
+            return;
         }
+        AnimationController.disableAutomaticAnimations(player);
+        handler.playAnimation(animation, 0.3, 0.3, 1, true);
+        HideAndSeekStorage.put("[Player]"+player.getName()+",Animation", true);
+        BukkitRunnable runnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!player.isOnline() || !((Boolean) HideAndSeekStorage.get("[Player]" + player.getName() + ",Animation"))) {
+                    this.cancel();
+                }
+            }
+        };
+        runnable.runTaskTimer(Bukkit.getPluginManager().getPlugin("HideAndseek"), 0, 5);
+        HideAndSeekStorage.put("[Player]"+player.getName()+",ActionbarRunnable", runnable);
     }
 
     @Override
     public String toString(Event e, boolean debug) {
-        return "stop animation of " + playerExpr.toString(e, debug) + " to " + animationExpr.toString(e, debug);
+        return "play switch animation of " + playerExpr.toString(e, debug) + " to " + animationExpr.toString(e, debug);
     }
 }

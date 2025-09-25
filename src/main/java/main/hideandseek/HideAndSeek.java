@@ -2,12 +2,12 @@ package main.hideandseek;
 
 
 import ch.njol.skript.Skript;
+import ch.njol.skript.lang.ExpressionType;
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import main.hideandseek.Command.HideAndSeekCommand;
 import main.hideandseek.Command.HideAndSeekCommandTab;
 import main.hideandseek.Event.HideAndSeekEvent;
-import main.hideandseek.SkriptAPI.PlayAnimation;
-import main.hideandseek.SkriptAPI.StopAnimation;
+import main.hideandseek.SkriptAPI.*;
 import main.hideandseek.Static.DataManager;
 import main.hideandseek.Static.ModelEngineAnimation;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -31,14 +31,20 @@ public final class HideAndSeek extends JavaPlugin {
         if(f.get("Random") == null) {
             f.set("Random", "ARMOR_STAND");
         }
-        Skript.registerEffect(PlayAnimation.class, "play animation of %player% to %string%");
+        Skript.registerEffect(PlaySwitchAnimation.class, "play switch animation of %player% to %string%");
+        Skript.registerEffect(PlayAutoAnimation.class, "play auto animation of %player% to %string%");
         Skript.registerEffect(StopAnimation.class, "stop animation of %player% to %string%");
-
+        Skript.registerEffect(DisguisePlayer.class, "set disguise model of %player% to %string%");
+        Skript.registerEffect(UnDisguisePlayer.class, "set undisguise model of %player%");
+        Skript.registerExpression(ExprPlayerModel.class, String.class, ExpressionType.SIMPLE,
+                "[the] model of %players%",
+                "%players%'[s] model"
+        );
         f.createFileIfNotExists();
         new BukkitRunnable() {
             @Override
             public void run() {
-                ModelEngineAnimation.ModelReload();
+                ModelEngineAnimation.ModelReload(null);
             }
         }.runTaskLater(this, 40);
     }

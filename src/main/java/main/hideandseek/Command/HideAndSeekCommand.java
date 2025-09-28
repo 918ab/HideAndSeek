@@ -80,7 +80,7 @@ public class HideAndSeekCommand implements CommandExecutor {
                                     for (Player p : Bukkit.getOnlinePlayers()){
                                         AnimationHandler handler = ModelEngineAnimation.getHandler(p);
                                         if (handler != null) {
-                                            String model = HideAndSeekStorage.get("[Player]"+p.getName()+",Model").toString();
+                                            String model = ModelEngineAnimation.getCurrentModelName(p);
                                             if(model.equals(modelId)){
                                                 ModelEngineAnimation.undisguisePlayer(p);
                                                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -105,7 +105,7 @@ public class HideAndSeekCommand implements CommandExecutor {
                                         for (Player p : Bukkit.getOnlinePlayers()){
                                             AnimationHandler handler = ModelEngineAnimation.getHandler(p);
                                             if (handler != null) {
-                                                String model = HideAndSeekStorage.get("[Player]"+p.getName()+",Model").toString();
+                                                String model = ModelEngineAnimation.getCurrentModelName(p);
                                                 if(model.equals(modelId)){
                                                     ModelEngineAnimation.undisguisePlayer(p);
                                                     Bukkit.getScheduler().runTaskLater(plugin, () -> {

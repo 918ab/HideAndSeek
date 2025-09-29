@@ -10,24 +10,28 @@
 ## 추가
 
 <details>
-<summary>v4 예정</summary>
+<summary>v4</summary>
 <p></p>
 
 ```
-Add
-- 기존 Shift + F -> gui 변경 예정
-- gui 각도 고정기능 추가
-- 몹 소환 후 원격 애니메이션 실행
-- 관전으로 자신의 모델을 볼수있는 기능
+Command
+- has info 변경
+- has reload 비동기로 변경
+- has setting 값만 변경하는식으로 변경
+- has setting 셋팅한 모델 변신중인 플레이어 새로고침
+- has random 페이지 기능 추가
 
-unDisguise
-- 변신 해제시 투명, 애니메이션 중지
+Shift+F
+- Model Hide 추가 (기존 본인 모델 숨기기)
+- Animation 추가 (idle, walk 등 자동 애니메이션 제거)
 
 Skript
-- set player's model to (ModelId) 추가 예정
-- play auto animation of player to "애니메이션이름"
-- play switch animation of player to "애니메이션이름"
-- stop animation of player to "애니메이션이름"
+- play animation of player to "애니메이션이름" /제거
+- play auto animation of player to "애니메이션이름" /추가
+- play switch animation of player to "애니메이션이름" /추가
+- set disguise model of player to "모델이름" /추가
+- set undisguise model of player /추가
+- %player's model% /추가
 ```
 
 </details>

@@ -132,6 +132,10 @@ Switch와 동일하나,
 
 | 구문                                |
 |-------------------------------------|
-|play animation of player to "애니메이션이름"|
+|play auto animation of player to "애니메이션이름"|
+|play switch animation of player to "애니메이션이름"|
 |stop animation of player to "애니메이션이름"|
+|set disguise model of player to "모델이름"|
+|set undisguise model of player|
+|%player's model%|
 
